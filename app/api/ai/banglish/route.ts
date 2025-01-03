@@ -9,5 +9,6 @@ export async function POST(req: NextRequest) {
     body: JSON.stringify({ text }),
   });
   const data = await response.json();
+  console.log(data);
   return NextResponse.json({ translatedText: data.translated_text });
 }
