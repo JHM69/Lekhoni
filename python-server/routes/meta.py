@@ -15,10 +15,11 @@ class BanglishRequest(BaseModel):
 def banglish_route(request: BanglishRequest):
     parser = PydanticOutputParser(pydantic_object=StoryMeta)
     meta_data = get_meta(text=request.text, parser=parser)
-    image_url = generate_image(request.text)
-    long_url = cloudinary.upload_image(image_url)
+    # image_url = generate_image(request.text)
+    # long_url = cloudinary.upload_image(image_url)
 
     meta_data_dict = meta_data.model_dump()
+    long_url = "https://res.cloudinary.com/dcx547o84/image/upload/v1735934998/Screenshot_2025-01-04_020918_kni6vw.png"
     meta_data_dict["thumbnail"] = long_url
     return {"meta": {
         "title": meta_data_dict["title"],

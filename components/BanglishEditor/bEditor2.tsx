@@ -5,6 +5,7 @@ import Button from "./Button";
 import FontSelector from "./FontSelector";
 import html2canvas from "html2canvas";
 import { Share } from "lucide-react";
+import {convertToHTMLText} from "@/lib/pdf_design";
 
 //
 // --- Custom Hook for Undo/Redo ---
@@ -194,11 +195,8 @@ const LekhoniEditor2 = ({
       const title = "Generated Title"; // Replace with actual title generation
       const caption = "AI Generated Caption"; // Replace with actual caption generation
 
-      container.innerHTML = `
-        <div style="font-size: 24px; font-weight: bold; margin-bottom: 1em;">${title}</div>
-        <div style="font-style: italic; margin-bottom: 2em;">${caption}</div>
-        ${editorRef.current.innerHTML}
-      `;
+      container.innerHTML = convertToHTMLText(title, caption, editorRef.current.innerHTML, "https://res.cloudinary.com/dcx547o84/image/upload/v1735934998/Screenshot_2025-01-04_020918_kni6vw.png"
+      );
 
       document.body.appendChild(container);
 

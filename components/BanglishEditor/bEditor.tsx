@@ -5,6 +5,7 @@ import Button from "./Button";
 import FontSelector from "./FontSelector";
 import html2canvas from "html2canvas";
 import { Share } from "lucide-react";
+import {convertToHTMLText} from "@/lib/pdf_design";
 
 const useHistory = (
   initialState: string,
@@ -155,11 +156,7 @@ const LekhoniEditor = ({
       const title = "Generated Title"; // Replace with actual title generation
       const caption = "AI Generated Caption"; // Replace with actual caption generation
 
-      container.innerHTML = `
-        <div style="font-size: 24px; font-weight: bold; margin-bottom: 1em;">${title}</div>
-        <div style="font-style: italic; margin-bottom: 2em;">${caption}</div>
-        ${editorRef.current.innerHTML}
-      `;
+      container.innerHTML = convertToHTMLText(title, caption, editorRef.current.innerHTML);
 
       document.body.appendChild(container);
 
