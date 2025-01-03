@@ -5,26 +5,19 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Avatar } from "@/components/ui/avatar";
-import BreadCrumb from "@/components/breadcrumb";
-import {
-  Plane,
+import { Avatar } from "@/components/ui/avatar"; 
+import { 
   Send,
-  Image as ImageIcon,
-  MapPin,
-  Hotel,
-  Calendar,
+  Image as ImageIcon, 
   Users,
-  Loader2,
-  Mountain,
+  Loader2, 
   Menu,
-  Mountain as MountainIcon,
+  Mountain,
   X,
   PenLine,
   MessageSquare,
   Mic,
-  MicOff,
-  PenBoxIcon,
+  MicOff, 
   PenToolIcon,
 } from "lucide-react";
 import {
@@ -75,7 +68,7 @@ export default function Page() {
   const [isRecording, setIsRecording] = useState(false);
 
 
-  const handleTranslate = async () => {
+  const handleNext = async () => {
     const maxCodeLength = 700;
 
     if (!inputMessage) {
@@ -98,6 +91,7 @@ export default function Page() {
     const body: ChatBody = {
       inputMessage,
       model,
+      history: JSON.stringify(messages),
     };
 
     try {
@@ -109,8 +103,7 @@ export default function Page() {
         signal: controller.signal,
         body: JSON.stringify(body),
       });
-
-      console.log(response);
+ 
 
       if (!response.ok) {
         throw new Error("API request failed");
@@ -156,16 +149,38 @@ export default function Page() {
     }
   };
 
-  // const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
-  //   if (e.key === "Enter" && !e.shiftKey) {
-  //     e.preventDefault();
-  //     handleSend();
-  //   }
-  // };
+  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleNext();
+    }
+  };
 
   const handleVoiceInput = () => {
     setIsRecording(!isRecording);
-    // Add voice recognition logic here
+
+    if (!isRecording) {
+      const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+      recognition.lang = 'bn-BD'; // Set language to Bengali
+      recognition.interimResults = false;
+      recognition.maxAlternatives = 1;
+
+      recognition.onresult = (event) => {
+        const transcript = event.results[0][0].transcript;
+        setInputMessage(transcript);
+      };
+
+      recognition.onerror = (event) => {
+        console.error("Speech recognition error:", event.error);
+        alert("Voice recognition error. Please try again.");
+      };
+
+      recognition.onend = () => {
+        setIsRecording(false);
+      };
+
+      recognition.start();
+    }
   };
 
   return (
@@ -336,7 +351,7 @@ export default function Page() {
                 placeholder="আপনার প্রশ্ন লিখুন..."
                 value={inputMessage}
                 onChange={(e) => setInputMessage(e.target.value)}
-                // onKeyPress={handleKeyPress}
+                onKeyPress={handleKeyPress}
                 className="md:w-[600px] lg:w-[800px] w-[300px] border-0 focus-visible:ring-0 focus-visible:ring-offset-0"
               />
 
@@ -361,7 +376,7 @@ export default function Page() {
               </TooltipProvider>
 
               <Button
-                onClick={handleTranslate}
+                onClick={handleNext}
                 disabled={loading}
                 className="bg-blue-500 w-2/12 hover:bg-blue-600 text-white"
               >

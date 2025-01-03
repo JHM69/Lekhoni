@@ -1,15 +1,22 @@
+import { Story } from '@/app/api/story/route';
 import endent from 'endent';
 import {
   createParser,
   ParsedEvent,
   ReconnectInterval,
-} from 'eventsource-parser';
+} from 'eventsource-parser'; 
 
-const createPrompt = (inputMessage: string) => {
+const createPrompt = (inputMessage: string, history: string | undefined, context: string | undefined) => {
   const data = (inputMessage: string) => {
     return endent`
       Your name is লেখনী। তুমি বাংলায় অনেক এক্সপার্ট, আর তুমি সবসময় বাংলায় উত্তর দিবে। 
+      তোমার সাথে পূর্বে যেসব কথা হয়েছেঃ ${history}.
+      তুমি Konwledge Base হিসেবে যেসকল তথ্য জানোঃ ${context}.
+
+      তোমার প্রশ্নটি হলঃ
       ${inputMessage}
+
+      If there is a @Story or anything related to Story , You will send your response as HTML formatted stories from the Context,
     `;
   };
 
@@ -21,16 +28,27 @@ const createPrompt = (inputMessage: string) => {
 export async function OpenAIStream   (
   inputMessage: string,
   model: string,
-  key: string | undefined,
+  history: string | undefined,
 )  {
-  const prompt = createPrompt(inputMessage);
+
+  console.log('OpenAIStream', inputMessage, model, history)
+
+
+  let context : Story[] = []
+
+  // TODO: Fetch the context from the database using the Embedding Similarity and Add the context to the prompt
+
+
+
+
+  const prompt = createPrompt(inputMessage, history, JSON.stringify(context));
 
   const system = { role: 'system', content: prompt };
 
   const res = await fetch(`https://api.openai.com/v1/chat/completions`, {
     headers: {
       'Content-Type': 'application/json',
-      Authorization: `Bearer ${key || process.env.NEXT_PUBLIC_OPENAI_API_KEY}`,
+      Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
     },
     method: 'POST',
     body: JSON.stringify({
