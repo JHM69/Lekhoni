@@ -13,7 +13,7 @@ def convert_to_bangla(text, parser=None):
     #     format_instructions = parser.get_format_instructions()
 
     message = HumanMessage(
-        content=f"Translate the following text to Bangla: {text}. Do not alter any word."
+        content=f"Translate the following text to Bangla: {text}. Do not alter any word. The text might contain html tags, keep them as it is and update the text inbetween the tags.",
     )
 
     response = model.invoke([message])

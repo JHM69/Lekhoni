@@ -3,7 +3,7 @@
 
 import LekhoniEditor from "@/components/BanglishEditor/bEditor"; // Removed duplicate BanglishEditor import
 import { Button } from "@/components/ui/button";
-import { LanguagesIcon, Share, Copy, Globe2, Lock } from "lucide-react"; // Add this import with other Lucide icons
+import { LanguagesIcon, Share, Copy, Globe2, Lock, Send } from "lucide-react"; // Add this import with other Lucide icons
 import { useState } from "react";
 import { useToast } from "@/components/ui/use-toast"; // Add this import
 import {
@@ -85,6 +85,45 @@ export default function Page() {
     }
   };
 
+  const handleImprove = async () => {
+    if (!translatedText) {
+      toast({
+        title: "Error",
+        description: "Please enter some text to improve",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+      console.log("Sending improvement request:", translatedText);
+
+      const apiUrl = model === 'openai-gpt-4o' ? '/api/ai/improve_writting' : '/api/ai/improve_writting';
+
+      const { data } = await axios.post(apiUrl, {
+        text: translatedText,
+      });
+
+      console.log("Improvement response:", data);
+
+      if (!data.improved_text) {
+        throw new Error("No improved text received");
+      }
+      console.log("Translated Text:", data.improved_text);
+      setTranslatedText(data.improved_text);
+    } catch (error) {
+      console.error("Improvement error:", error);
+      toast({
+        title: "Improvement Failed",
+        description: "Failed to improve text. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const onTranslateTextChange = (text: string) => {
     setTranslatedText(text);
   };
@@ -124,6 +163,11 @@ export default function Page() {
   const handleShareClick = async () => {
     setIsShareDialogOpen(true);
     await fetchMetadata();
+  };
+
+  const handleFeedbackClick = async () => {
+    const feedbackUrl = `/feedback?input=${encodeURIComponent(editedText)}&output=${encodeURIComponent(translatedText || '')}`;
+    window.open(feedbackUrl, "_blank");
   };
 
   const handleShareSubmit = async () => {
@@ -225,7 +269,7 @@ export default function Page() {
           </div>
 
           {/* Center Button */}
-          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-10 lg:block hidden">
+            <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-10 lg:block hidden space-y-4">
             <Button
               onClick={handleTranslate}
               className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 transform transition-transform hover:scale-105 shadow-lg"
@@ -234,7 +278,16 @@ export default function Page() {
             >
               {isLoading ? "অনুবাদ হচ্ছে..." : "অনুবাদ করুন"}
             </Button>
-          </div>
+
+            <Button
+              onClick={handleImprove}
+              className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 transform transition-transform hover:scale-105 shadow-lg"
+              disabled={isLoading}
+              size="lg"
+            >
+              {isLoading ? "উন্নত হচ্ছে..." : "উন্নত করুন"}
+            </Button>
+            </div>
 
           {/* Translation Section */}
           <div className="rounded-xl shadow-lg border min-h-[600px]">
@@ -261,6 +314,13 @@ export default function Page() {
                         <Share size={18} className="text-gray-100" />
                         <span className="ml-2 font-bold text-gray-100">শেয়ার করুন</span>
                       </Button>
+                      <Button
+                        className="flex items-end flex-row bg-green-800 dark:bg-green-700 hover:dark:bg-green-700"
+                        onClick={handleFeedbackClick} // Fixed handler name
+                      >
+                        <Send size={18} className="text-gray-100" />
+                        <span className="ml-2 font-bold text-gray-100">প্রতিক্রিয়া</span>
+                      </Button>
                     </div>
 
                     {/* Display Translated Text */}
@@ -281,7 +341,7 @@ export default function Page() {
           </div>
 
           {/* Mobile Translation Button */}
-          <div className="lg:hidden flex justify-center mt-4">
+          {/* <div className="lg:hidden flex justify-center mt-4">
 
           
             <Button
@@ -296,7 +356,7 @@ export default function Page() {
                <LanguagesIcon size={24} />
               </>}
             </Button>
-          </div>
+          </div> */}
         </div>
       </div>
 
