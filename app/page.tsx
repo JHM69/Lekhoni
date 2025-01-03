@@ -1,8 +1,11 @@
 "use client";
 import React from "react";
 import { ScrollText, ChevronRight, PenTool, Users, BookOpen } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 export default function Homepage() {
+  const router = useRouter();
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-shadcn-dark via-shadcn to-shadcn-dark text-shadcn-light">
       {/* Hero Section */}
@@ -18,10 +21,13 @@ export default function Homepage() {
               সমৃদ্ধ কমিউনিটির অংশ হোন।
             </p>
             <div className="flex justify-center gap-4">
-              <button className="bg-primary text-primary-foreground px-8 py-3 rounded-lg font-medium hover:bg-shadcn-primary-dark transition-all flex items-center gap-2 shadow-lg transform hover:scale-105">
-                <ScrollText className="w-5 h-5" />
-                গল্প পড়তে শুরু করুন
-                <ChevronRight className="w-5 h-5" />
+              <button
+              className="bg-primary text-primary-foreground px-8 py-3 rounded-lg font-medium hover:bg-shadcn-primary-dark transition-all flex items-center gap-2 shadow-lg transform hover:scale-105"
+              onClick={() => router.push('/stories')}
+              >
+              <ScrollText className="w-5 h-5" />
+              গল্প পড়তে শুরু করুন
+              <ChevronRight className="w-5 h-5" />
               </button>
             </div>
           </div>
