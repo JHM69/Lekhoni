@@ -3,6 +3,7 @@ import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Search, BookOpen, ThumbsUp, MessageCircle, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Select,
   SelectContent,
@@ -55,8 +56,9 @@ export default function StoriesPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-shadcn-dark via-shadcn to-shadcn-dark p-4 md:p-6 mt-8">
-      <div className="max-w-7xl mx-auto space-y-8">
+    <ScrollArea className="h-full">
+    <div className="bg-gradient-to-b from-shadcn-dark via-shadcn to-shadcn-dark p-4 md:p-6 mt-8">
+      <div className="max-w-7xl mx-auto space-y-8 pb-8">
         {/* Header with improved styling */}
         <div className="text-center space-y-4 py-8">
           <h1 className="font-galada text-4xl md:text-5xl font-bold text-primary">
@@ -104,7 +106,7 @@ export default function StoriesPage() {
                   className="object-cover group-hover:scale-105 transition-transform duration-300"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-shadcn-dark to-transparent opacity-60" />
-                <div className="absolute top-2 right-2 bg-shadcn-dark/80 px-3 py-1 rounded-full text-xs text-primary">
+                <div className="absolute top-2 right-2 bg-primary px-3 py-1 rounded-full text-xs text-primary-foreground">
                   {story.category}
                 </div>
               </div>
@@ -157,5 +159,6 @@ export default function StoriesPage() {
         {/* ...existing pagination code... */}
       </div>
     </div>
+    </ScrollArea>
   );
 }

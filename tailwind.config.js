@@ -72,9 +72,12 @@ module.exports = {
         "accordion-up": "accordion-up 0.2s ease-out",
       },
       fontFamily: {
-        bengali: ['var(--font-bengali)'],
-        sans: ['var(--font-noto-bengali)'],
-        galada: ['var(--font-galada)'],
+        bengali: ["var(--font-bengali)"],
+        sans: ["var(--font-noto-bengali)"],
+        galada: ["var(--font-galada)"],
+      },
+      backgroundImage: {
+        "gradient-radial": "radial-gradient(var(--tw-gradient-stops))",
       },
     },
   },

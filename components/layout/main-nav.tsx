@@ -36,7 +36,7 @@ const Header = () => {
             লেখনী
             </div>
           <nav className="hidden md:flex gap-6">
-            <a href="#stories" className="text-muted-foreground hover:text-foreground flex items-center gap-2 transition-colors duration-300">
+            <a href="/stories" className="text-muted-foreground hover:text-foreground flex items-center gap-2 transition-colors duration-300">
               <BookOpen className="w-4 h-4" />
               গল্প পড়ুন
             </a>
