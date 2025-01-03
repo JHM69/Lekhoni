@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from routes import banglish, improve, chat
+from routes import banglish, improve, chat, meta
 import dotenv
 dotenv.load_dotenv()
 
@@ -9,6 +9,7 @@ app = FastAPI()
 app.include_router(banglish.router, prefix="/banglish", tags=["Banglish"])
 app.include_router(improve.router, prefix="/improve", tags=["Improve"])
 app.include_router(chat.router, prefix="/chat", tags=["Chat"])
+app.include_router(meta.router, prefix="/meta", tags=["Meta"])
 
 if __name__ == "__main__":
     import uvicorn
