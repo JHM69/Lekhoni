@@ -4,6 +4,7 @@ import CredentialProvider from "next-auth/providers/credentials";
 import { PrismaAdapter } from '@next-auth/prisma-adapter';
 import prisma from '../prisma/prisma-client';
 import { env } from "process";
+import bcrypt from 'bcryptjs';
 
 export const authOptions: NextAuthOptions = {
   callbacks: {
@@ -33,39 +34,37 @@ export const authOptions: NextAuthOptions = {
         email: {
           label: "email",
           type: "email",
-          placeholder: "tw@gmail.com",
+          placeholder: "landsat@gmail.com",
+        },
+        password: {
+          label: "Password",
+          type: "password",
         },
       },
       async authorize(credentials, req) {
-        const user = { id: "5", name: "Test User", email: credentials?.email };
-        // if credentials?.email not equal to tw@gmail.com then return null
-        if (credentials?.email !== "tw@gmail.com") {
+        if (!credentials?.email || !credentials?.password) {
           return null;
         }
-        if (user) {
-          // Any object returned will be saved in `user` property of the JWT
-          await prisma.user.upsert({
-            where: {
-              email: user.email,
-            },
-            update: {
-              email: user.email,
-              name: user.name, 
-              passwordHash: "tw",
-            },
-            create: {
-              email: user.email as string,
-              name: user.name,
-              passwordHash: "tw",
-            },
-          });
-          return user;
-        } else {
-          // If you return null then an error will be displayed advising the user to check their details.
-          return null;
 
-          // You can also Reject this callback with an Error thus the user will be sent to the error page with the error message as a query parameter
+        const user = await prisma.user.findUnique({
+          where: { email: credentials.email },
+        });
+
+        if (!user) {
+          return null;
         }
+
+        const isValidPassword = user.passwordHash ? await bcrypt.compare(credentials.password, user.passwordHash) : false;
+
+        if (!isValidPassword) {
+          return null;
+        }
+
+        return {
+          id: user.id,
+          name: user.name,
+          email: user.email,
+        };
       },
     }),
     GoogleProvider({

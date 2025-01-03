@@ -1,14 +1,15 @@
 "use client";
+import React from "react";
 import { Metadata } from "next";
 import Link from "next/link";
-import UserSigninForm from "@/components/forms/user-signin-form";
+import UserSignupForm from "@/components/forms/user-signup-form";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 import GoogleSignInButton from "@/components/google-auth-button";
 import { useToast } from "@/components/ui/use-toast";
 
-export default function AuthenticationPage() {
+export default function SignupPage() {
   const { toast } = useToast();
   return (
     <div className="relative h-screen flex-col items-center justify-center md:grid lg:max-w-none lg:grid-cols-2 lg:px-0">
@@ -57,20 +58,20 @@ export default function AuthenticationPage() {
         <div className="mx-auto flex w-full flex-col justify-center space-y-6 sm:w-[350px]">
           <div className="flex flex-col space-y-2 text-center">
             <h1 className="text-2xl font-semibold tracking-tight">
-              লগ ইন করুন
+              সাইন আপ করুন
             </h1>
             <p className="text-sm text-muted-foreground">
-              গুগল অ্যাকাউন্ট দিয়ে লগ ইন করুন
+              গুগল অ্যাকাউন্ট দিয়ে সাইন আপ করুন
             </p>
           </div>
-          <UserSigninForm />
+          <UserSignupForm />
 
-          {/* Create an Account */}
+          {/* Already have an account */}
 
           <p className="text-center text-sm text-muted-foreground">
-            একাউন্ট নেই?{" "}
-            <Link href="/signup" className="text-primary">
-              সাইন আপ করুন
+            একাউন্ট আছে?{" "}
+            <Link href="/signin" className="text-primary">
+              লগ ইন করুন
             </Link>
           </p>
 

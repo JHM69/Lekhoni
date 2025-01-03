@@ -15,7 +15,7 @@ import { useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
-import GoogleSignInButton from "../github-auth-button"; 
+import { useToast } from "@/components/ui/use-toast";
 
 const formSchema = z.object({
   email: z.string().email({ message: "Enter a valid email address" }),
@@ -24,7 +24,8 @@ const formSchema = z.object({
 
 type UserFormValue = z.infer<typeof formSchema>;
 
-export default function UserAuthForm() {
+export default function UserSigninForm() {
+  const { toast } = useToast();
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get("callbackUrl");
   const [loading, setLoading] = useState(false);
@@ -38,15 +39,36 @@ export default function UserAuthForm() {
   });
 
   const onSubmit = async (data: UserFormValue) => {
-    // if password is not bollinger@gmail.com then return
-    if (data.email !== "test@gmail.com") {
-      alert("Email must be example@gmail.com");
+    setLoading(true);
+    try {
+      const result = await signIn("credentials", {
+        email: data.email,
+        password: data.password,
+        callbackUrl: callbackUrl ?? "/write",
+        redirect: false,
+      });
+
+      if (result?.error) {
+        toast({
+          title: "Login failed",
+          description: result.error,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Login successful",
+          description: "You have successfully logged in."
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "An error occurred",
+        description: "Unable to login. Please try again later.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
     }
-    signIn("credentials", {
-      email: data.email,
-      password: data.password,
-      callbackUrl: callbackUrl ?? "/write",
-    });
   };
 
   return (
