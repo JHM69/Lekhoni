@@ -1,82 +1,113 @@
 "use client";
-import { Metadata } from "next";
 import Link from "next/link";
 import UserSigninForm from "@/components/forms/user-signin-form";
-import { buttonVariants } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
-import { DotLottieReact } from "@lottiefiles/dotlottie-react";
+import { motion } from "framer-motion";
 import GoogleSignInButton from "@/components/google-auth-button";
 import { useToast } from "@/components/ui/use-toast";
 
+const FloatingShape = ({ className }: { className?: string }) => (
+  <motion.div
+    className={`absolute w-12 h-12 rounded-xl bg-primary/20 backdrop-blur-xl ${className}`}
+    animate={{
+      y: [0, 20, 0],
+      rotate: [0, 10, -10, 0],
+    }}
+    transition={{
+      duration: 5,
+      repeat: Infinity,
+      ease: "easeInOut",
+    }}
+  />
+);
+
+const FogLayer = ({ className }: { className?: string }) => (
+  <motion.div
+    className={`absolute inset-0 pointer-events-none ${className}`}
+    animate={{
+      x: [0, -400, 0],
+      opacity: [0.5, 0.3, 0.5],
+    }}
+    transition={{
+      duration: 20,
+      repeat: Infinity,
+      ease: "linear",
+    }}
+    style={{
+      background: "url('/fog.png')",
+      backgroundSize: "cover",
+    }}
+  />
+);
+
 export default function AuthenticationPage() {
   const { toast } = useToast();
+
   return (
-    <div className="relative h-screen flex-col items-center justify-center md:grid lg:max-w-none lg:grid-cols-2 lg:px-0">
-      <Link
-        href="/examples/authentication"
-        className={cn(
-          buttonVariants({ variant: "ghost" }),
-          "absolute right-4 hidden top-4 md:right-8 md:top-8",
-        )}
-      >
-        Login/Sign Up
-      </Link>
-      <div className="relative hidden h-full flex-col bg-muted p-10 text-white dark:border-r lg:flex">
-        <div className="absolute inset-0 bg-zinc-900" />
-        <div className="relative z-20 flex items-center text-lg font-medium">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            className="mr-2 h-6 w-6"
-          >
-            <path d="M18.375 2.625a1 1 0 0 1 3 3l-9.013 9.014a2 2 0 0 1-.853.505l-2.873.84a.5.5 0 0 1-.62-.62l.84-2.873a2 2 0 0 1 .506-.852z" />
-          </svg>
-          লেখনী
-        </div>
-        <div className="absolute inset-0 z-0">
-          <DotLottieReact
-            src="land2.json"
-            loop
-            autoplay
-            className="w-full h-full object-cover"
-          />
-        </div>
-        <div className="relative z-20 mt-auto">
-          <blockquote className="space-y-2">
-            <p className="text-lg">বাংলা লিখি বাংলায়</p>
-            <footer className="text-sm">কোয়ান্টাম গাইজ</footer>
-          </blockquote>
-        </div>
+    <div className="relative min-h-screen flex items-center justify-center overflow-hidden bg-shadcn-dark">
+      {/* Background Effects */}
+      <div className="fixed inset-0 pointer-events-none">
+        <div className="absolute inset-0 bg-gradient-to-b from-shadcn-dark/90 via-shadcn/90 to-shadcn-dark/90 backdrop-blur-[100px]" />
+        <FogLayer className="opacity-30" />
+        <FogLayer className="opacity-20 scale-150" />
+        <div className="absolute inset-0 bg-gradient-radial from-transparent to-shadcn-dark/80" />
       </div>
-      <div className="p-4 lg:p-8 h-full flex items-center">
-        <div className="mx-auto flex w-full flex-col justify-center space-y-6 sm:w-[350px]">
-          <div className="flex flex-col space-y-2 text-center">
-            <h1 className="text-2xl font-semibold tracking-tight">
-              লগ ইন করুন
-            </h1>
-            <p className="text-sm text-muted-foreground">
-              গুগল অ্যাকাউন্ট দিয়ে লগ ইন করুন
+
+      {/* Floating Shapes */}
+      <FloatingShape className="top-20 left-20" />
+      <FloatingShape className="bottom-20 right-20" />
+      <FloatingShape className="top-1/2 right-32" />
+
+      {/* Main Content */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.8 }}
+        className="relative z-10 w-full max-w-md p-8 mx-4"
+      >
+        <div className="bg-shadcn-dark/50 backdrop-blur-xl p-8 rounded-3xl border border-primary/10 shadow-2xl">
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.2 }}
+            className="text-center mb-8"
+          >
+            <h1 className="text-3xl font-galada text-primary mb-3">লেখনীতে স্বাগতম</h1>
+            <p className="text-shadcn-muted">আপনার অ্যাকাউন্টে লগ ইন করুন</p>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+          >
+            <UserSigninForm />
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.4 }}
+            className="mt-6 text-center"
+          >
+            <p className="text-sm text-shadcn-muted mb-4">
+              অথবা
             </p>
-          </div>
-          <UserSigninForm />
+            <GoogleSignInButton />
+          </motion.div>
 
-          {/* Create an Account */}
-
-          <p className="text-center text-sm text-muted-foreground">
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.5 }}
+            className="text-center mt-6 text-sm text-shadcn-muted"
+          >
             একাউন্ট নেই?{" "}
-            <Link href="/signup" className="text-primary">
+            <Link href="/signup" className="text-primary hover:underline">
               সাইন আপ করুন
             </Link>
-          </p>
-
-          <GoogleSignInButton />
+          </motion.p>
         </div>
-      </div>
+      </motion.div>
     </div>
   );
 }

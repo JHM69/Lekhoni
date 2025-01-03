@@ -9,3 +9,6 @@ langchain_google_genai
 langchain-openai
 google-generativeai==0.8.1
 python-dotenv
+
+transformers
+torch
