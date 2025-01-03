@@ -1,0 +1,337 @@
+"use client";
+import React, { useState } from "react";
+import Image from "next/image";
+import { format } from "date-fns";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  ThumbsUp,
+  MessageCircle,
+  Share2,
+  Bookmark,
+  Clock,
+  Heart,
+  Send,
+} from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useRouter } from "next/navigation";
+import { motion } from "framer-motion";
+import { Card, CardContent } from "@/components/ui/card";
+
+// Dummy story data
+const dummyStory = {
+  id: "1",
+  title: "নীল জলের গভীরে",
+  content: `<p>সমুদ্রের গভীরে লুকিয়ে থাকা এক অজানা রহস্যের গল্প। একদল গবেষক তাদের অভিযানে যা আবিষ্কার করলেন, তা তাদের জীবন চিরদিনের জন্য বদলে দিল...</p>
+  <p>গভীর সমুদ্রের নীল জলে ডুব দিয়ে তারা খুঁজে পেল এক প্রাচীন সভ্যতার ধ্বংসাবশেষ। সেখানে ছিল অজানা লিপিতে লেখা কিছু তথ্য, যা বর্তমান বিজ্ঞানের সীমানা ছাড়িয়ে যায়...</p>
+  <p>প্রতিদিন নতুন নতুন আবিষ্কার তাদের আরও গভীরে টেনে নিয়ে যেতে থাকে। কিন্তু সেই গভীরে লুকিয়ে আছে এমন কিছু, যা মানবজাতির জন্য হুমকি হয়ে উঠতে পারে...</p>`,
+  author: {
+    id: "1",
+    name: "তানভীর আহমেদ",
+    image: "https://api.dicebear.com/7.x/personas/svg?seed=tanvir",
+    bio: "বাংলা সাহিত্যের একজন উদীয়মান লেখক। রহস্য ও এডভেঞ্চার গল্প লেখায় বিশেষ দক্ষ।",
+    followers: 1234,
+    storiesCount: 45,
+  },
+  thumbnail: "https://random.imagecdn.app/1200/400?ocean,underwater",
+  category: "রহস্য",
+  readTime: "৮ মিনিট",
+  createdAt: new Date("2024-01-15"),
+  likes: 234,
+  comments: [
+    {
+      id: "1",
+      user: {
+        id: "2",
+        name: "সাদিয়া আহমেদ",
+        image: "https://api.dicebear.com/7.x/personas/svg?seed=sadia",
+      },
+      content: "দারুণ গল্প! পরের পর্বের জন্য অপেক্ষায় রইলাম।",
+      createdAt: new Date("2024-01-16"),
+      likes: 12,
+    },
+    // Add more comments as needed
+  ],
+};
+
+const similarStories = [
+  {
+    id: "2",
+    title: "সাগরের ডাক",
+    thumbnail: "https://random.imagecdn.app/300/200?ocean",
+    author: "রিফাত হোসেন",
+    readTime: "৫ মিনিট",
+  },
+  // ...add more similar stories
+];
+
+const trendingStories = [
+  {
+    id: "3",
+    title: "অতলে যাত্রা",
+    thumbnail: "https://random.imagecdn.app/300/200?deep",
+    likes: 456,
+    comments: 89,
+  },
+  // ...add more trending stories
+];
+
+export default function StoryViewPage() {
+  const [comment, setComment] = useState("");
+  const [isLiked, setIsLiked] = useState(false);
+  const [isBookmarked, setIsBookmarked] = useState(false);
+  const router = useRouter();
+
+  const goToProfile = (userId: string) => {
+    router.push(`/profile/view/${userId}`);
+  };
+
+  return (
+    <ScrollArea className="h-full">
+      <div className="min-h-screen bg-gradient-to-b from-shadcn-dark via-shadcn to-shadcn-dark p-4 md:p-6 mt-20">
+        <div className="max-w-[1400px] mx-auto grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Main Content */}
+          <div className="lg:col-span-2 space-y-8">
+            {/* Story Header */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+              className="space-y-4"
+            >
+              <h1 className="font-galada text-4xl md:text-5xl font-bold text-primary">
+                {dummyStory.title}
+              </h1>
+              
+              {/* Author info and metadata */}
+              <div className="flex items-center justify-between py-4 border-y border-shadcn-primary/30">
+                <div className="flex items-center gap-4">
+                  <Avatar className="h-12 w-12 cursor-pointer" onClick={() => goToProfile(dummyStory.author.id)}>
+                    <AvatarImage src={dummyStory.author.image} />
+                    <AvatarFallback>{dummyStory.author.name[0]}</AvatarFallback>
+                  </Avatar>
+                  <div>
+                    <h3 className="font-semibold text-primary">{dummyStory.author.name}</h3>
+                    <div className="flex items-center gap-4 text-sm text-shadcn-muted">
+                      <span className="flex items-center gap-1">
+                        <Clock className="w-4 h-4" />
+                        {dummyStory.readTime}
+                      </span>
+                      <span>{format(dummyStory.createdAt, 'PP')}</span>
+                    </div>
+                  </div>
+                </div>
+                <Button variant="outline" className="hover:text-primary">
+                  Follow
+                </Button>
+              </div>
+            </motion.div>
+
+            {/* Featured Image */}
+            <div className="relative h-[400px] rounded-lg overflow-hidden">
+              <Image
+                src={dummyStory.thumbnail}
+                alt={dummyStory.title}
+                fill
+                className="object-cover"
+              />
+            </div>
+
+            {/* Story Content */}
+            <article className="prose prose-invert max-w-none">
+              <div dangerouslySetInnerHTML={{ __html: dummyStory.content }} />
+            </article>
+
+            {/* Enhanced Reactions Bar */}
+            <motion.div
+              whileHover={{ scale: 1.02 }}
+              className="flex items-center justify-between py-6 border-y border-shadcn-primary/30 bg-shadcn-dark/50 rounded-lg px-4"
+            >
+              <div className="flex items-center gap-6">
+                <Button
+                  variant="ghost"
+                  className={`flex items-center gap-2 ${isLiked ? 'text-primary' : ''}`}
+                  onClick={() => setIsLiked(!isLiked)}
+                >
+                  <Heart className={`w-5 h-5 ${isLiked ? 'fill-current' : ''}`} />
+                  <span>{dummyStory.likes}</span>
+                </Button>
+                <Button variant="ghost" className="flex items-center gap-2">
+                  <MessageCircle className="w-5 h-5" />
+                  <span>{dummyStory.comments.length}</span>
+                </Button>
+              </div>
+              <div className="flex items-center gap-4">
+                <Button variant="ghost" className="flex items-center gap-2">
+                  <Share2 className="w-5 h-5" />
+                  Share
+                </Button>
+                <Button
+                  variant="ghost"
+                  className={`flex items-center gap-2 ${isBookmarked ? 'text-primary' : ''}`}
+                  onClick={() => setIsBookmarked(!isBookmarked)}
+                >
+                  <Bookmark className={`w-5 h-5 ${isBookmarked ? 'fill-current' : ''}`} />
+                  Save
+                </Button>
+              </div>
+            </motion.div>
+
+            {/* Comments Section */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.3 }}
+              className="space-y-6"
+            >
+              <h3 className="text-2xl font-galada text-primary">মন্তব্যসমূহ</h3>
+              
+              {/* Comment Input */}
+              <div className="flex gap-4">
+                <Avatar className="h-10 w-10">
+                  <AvatarImage src="https://api.dicebear.com/7.x/personas/svg?seed=user" />
+                  <AvatarFallback>U</AvatarFallback>
+                </Avatar>
+                <div className="flex-1 space-y-2">
+                  <Textarea
+                    placeholder="আপনার মন্তব্য লিখুন..."
+                    value={comment}
+                    onChange={(e) => setComment(e.target.value)}
+                    className="min-h-[100px]"
+                  />
+                  <Button className="float-right">
+                    <Send className="w-4 h-4 mr-2" />
+                    পোস্ট করুন
+                  </Button>
+                </div>
+              </div>
+
+              {/* Comments List */}
+              <div className="space-y-4 mt-8">
+                {dummyStory.comments.map((comment) => (
+                  <div key={comment.id} className="flex gap-4">
+                    <Avatar className="h-10 w-10 cursor-pointer" onClick={() => goToProfile(comment.user.id)}>
+                      <AvatarImage src={comment.user.image} />
+                      <AvatarFallback>{comment.user.name[0]}</AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1 space-y-1">
+                      <div className="flex items-center justify-between">
+                        <h4 className="font-semibold text-primary">{comment.user.name}</h4>
+                        <span className="text-xs text-shadcn-muted">
+                          {format(comment.createdAt, 'PP')}
+                        </span>
+                      </div>
+                      <p>{comment.content}</p>
+                      <div className="flex items-center gap-2 text-sm text-shadcn-muted">
+                        <ThumbsUp className="w-4 h-4" />
+                        <span>{comment.likes}</span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </motion.div>
+          </div>
+
+          {/* Sidebar */}
+          <div className="space-y-6">
+            {/* Author Card */}
+            <Card className="bg-shadcn-dark/50 border-shadcn-primary/30">
+              <CardContent className="p-6 space-y-4">
+                <div className="text-center space-y-4">
+                  <Avatar className="h-24 w-24 mx-auto">
+                    <AvatarImage src={dummyStory.author.image} />
+                    <AvatarFallback>{dummyStory.author.name[0]}</AvatarFallback>
+                  </Avatar>
+                  <div>
+                    <h3 className="text-xl font-semibold text-primary">{dummyStory.author.name}</h3>
+                    <p className="text-shadcn-muted text-sm">{dummyStory.author.bio}</p>
+                  </div>
+                  <div className="flex justify-center gap-6 text-sm">
+                    <div>
+                      <p className="font-semibold text-primary">{dummyStory.author.followers}</p>
+                      <p className="text-shadcn-muted">অনুসারী</p>
+                    </div>
+                    <div>
+                      <p className="font-semibold text-primary">{dummyStory.author.storiesCount}</p>
+                      <p className="text-shadcn-muted">গল্প</p>
+                    </div>
+                  </div>
+                  <Button className="w-full">অনুসরণ করুন</Button>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Similar Stories */}
+            <Card className="bg-shadcn-dark/50 border-shadcn-primary/30">
+              <CardContent className="p-6 space-y-4">
+                <h3 className="text-xl font-galada text-primary">এরকম আরও গল্প</h3>
+                <div className="space-y-4">
+                  {similarStories.map((story) => (
+                    <motion.div
+                      key={story.id}
+                      whileHover={{ scale: 1.02 }}
+                      className="flex gap-4 cursor-pointer"
+                    >
+                      <div className="relative h-20 w-20 rounded-lg overflow-hidden">
+                        <Image
+                          src={story.thumbnail}
+                          alt={story.title}
+                          fill
+                          className="object-cover"
+                        />
+                      </div>
+                      <div className="flex-1">
+                        <h4 className="font-semibold hover:text-primary">{story.title}</h4>
+                        <p className="text-sm text-shadcn-muted">{story.author}</p>
+                        <p className="text-xs text-shadcn-muted">{story.readTime}</p>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Trending Stories */}
+            <Card className="bg-shadcn-dark/50 border-shadcn-primary/30">
+              <CardContent className="p-6 space-y-4">
+                <h3 className="text-xl font-galada text-primary">ট্রেন্ডিং গল্পসমূহ</h3>
+                <div className="space-y-4">
+                  {trendingStories.map((story) => (
+                    <motion.div
+                      key={story.id}
+                      whileHover={{ scale: 1.02 }}
+                      className="flex gap-4 cursor-pointer"
+                    >
+                      <div className="relative h-20 w-20 rounded-lg overflow-hidden">
+                        <Image
+                          src={story.thumbnail}
+                          alt={story.title}
+                          fill
+                          className="object-cover"
+                        />
+                      </div>
+                      <div className="flex-1">
+                        <h4 className="font-semibold hover:text-primary">{story.title}</h4>
+                        <div className="flex items-center gap-4 text-xs text-shadcn-muted">
+                          <span className="flex items-center gap-1">
+                            <Heart className="w-3 h-3" /> {story.likes}
+                          </span>
+                          <span className="flex items-center gap-1">
+                            <MessageCircle className="w-3 h-3" /> {story.comments}
+                          </span>
+                        </div>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </div>
+    </ScrollArea>
+  );
+}

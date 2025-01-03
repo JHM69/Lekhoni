@@ -9,6 +9,7 @@ import "./globals.css";
 import './base-editor.css';
 import './editor.css';
 import { getServerSession } from "next-auth";
+import ChatPopup from "@/components/layout/chat_popup";
 
 const notoSansBengali = Noto_Sans_Bengali({
   weight: ['400', '500', '600', '700'],
@@ -40,6 +41,7 @@ export default async function RootLayout({
           <Toaster />
           <Header />
           {children}
+          <ChatPopup />
         </Providers>
       </body>
     </html>
