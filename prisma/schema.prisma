@@ -1,0 +1,131 @@
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions"]
+}
+
+generator dbml {
+  provider   = "prisma-dbml-generator"
+  extensions = ["(function)"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL") 
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model User {
+  id            String      @id @default(cuid())
+  email         String      @unique
+  passwordHash  String?
+  name          String?
+  image         String?
+  emailVerified DateTime?
+  socketId      String?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  accounts      Account[]
+  stories       Story[]
+  chats         Chat[]
+  sessions      Session[] 
+  comments      Comment[] 
+  notifications Notification[]
+  @@index([email])
+}
+ 
+
+model Notification {
+  id         String   @id @default(cuid())
+  content    String
+  read       Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model Story {
+  id         String   @id @default(cuid())
+  title      String
+  content    String
+  authorId   String
+  status     STATUS    @default(PRIVATE)
+  liked      Int      @default(0)
+  comments   Comment[] 
+  rawContent           String
+  numberOfWords Int  @default(0)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  author     User     @relation(fields: [authorId], references: [id])
+  pureHuman  Boolean  @default(true)
+  @@index([authorId])
+}
+
+model Comment {
+  id         String   @id @default(cuid())
+  content    String
+  authorId   String
+  storyId    String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  author     User     @relation(fields: [authorId], references: [id])
+  story      Story    @relation(fields: [storyId], references: [id])
+  @@index([authorId])
+  @@index([storyId])
+}
+
+
+model Chat {
+  id         String   @id @default(cuid())
+  content    String
+  authorId   String
+  storyId    String
+  createdAt  DateTime @default(now())
+  role       Role     @default(USER)
+  updatedAt  DateTime @updatedAt
+  user       User     @relation(fields: [authorId], references: [id])
+  userId     String @unique
+  @@index([authorId])
+  @@index([storyId])
+}
+ 
+
+enum STATUS {
+  PUBLIC
+  PRIVATE
+}
+
+enum Role {
+  USER
+  AI
+}

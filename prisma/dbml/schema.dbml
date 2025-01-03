@@ -1,0 +1,122 @@
+//// ------------------------------------------------------
+//// THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
+//// ------------------------------------------------------
+
+Table Account {
+  id String [pk]
+  userId String [not null]
+  type String [not null]
+  provider String [not null]
+  providerAccountId String [not null]
+  refresh_token String
+  access_token String
+  expires_at Int
+  token_type String
+  scope String
+  id_token String
+  session_state String
+  user User [not null]
+
+  indexes {
+    (provider, providerAccountId) [unique]
+  }
+}
+
+Table Session {
+  id String [pk]
+  sessionToken String [unique, not null]
+  userId String [not null]
+  expires DateTime [not null]
+  user User [not null]
+}
+
+Table User {
+  id String [pk]
+  email String [unique, not null]
+  passwordHash String
+  name String
+  image String
+  emailVerified DateTime
+  socketId String
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [not null]
+  accounts Account [not null]
+  stories Story [not null]
+  chats Chat [not null]
+  sessions Session [not null]
+  comments Comment [not null]
+  notifications Notification [not null]
+}
+
+Table Notification {
+  id String [pk]
+  content String [not null]
+  read Boolean [not null, default: false]
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [not null]
+  userId String [not null]
+  user User [not null]
+}
+
+Table Story {
+  id String [pk]
+  title String [not null]
+  content String [not null]
+  authorId String [not null]
+  status STATUS [not null, default: 'PRIVATE']
+  liked Int [not null, default: 0]
+  comments Comment [not null]
+  rawContent String [not null]
+  numberOfWords Int [not null, default: 0]
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [not null]
+  author User [not null]
+  pureHuman Boolean [not null, default: true]
+}
+
+Table Comment {
+  id String [pk]
+  content String [not null]
+  authorId String [not null]
+  storyId String [not null]
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [not null]
+  author User [not null]
+  story Story [not null]
+}
+
+Table Chat {
+  id String [pk]
+  content String [not null]
+  authorId String [not null]
+  storyId String [not null]
+  createdAt DateTime [default: `now()`, not null]
+  role Role [not null, default: 'USER']
+  updatedAt DateTime [not null]
+  user User [not null]
+  userId String [unique, not null]
+}
+
+Enum STATUS {
+  PUBLIC
+  PRIVATE
+}
+
+Enum Role {
+  USER
+  AI
+}
+
+Ref: Account.userId > User.id [delete: Cascade]
+
+Ref: Session.userId > User.id [delete: Cascade]
+
+Ref: Notification.userId > User.id [delete: Cascade]
+
+Ref: Story.authorId > User.id
+
+Ref: Comment.authorId > User.id
+
+Ref: Comment.storyId > Story.id
+
+Ref: Chat.authorId > User.id
