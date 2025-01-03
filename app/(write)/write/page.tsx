@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import CustomEditor from "@/components/Editor/editor";
 import { Button } from "@/components/ui/button";
@@ -15,6 +15,7 @@ import {
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { useRouter } from "next/navigation";
+import BanglishEditor from "@/components/BanglishEditor/bEditor";
 
 export default function Page() {
   const [editedText, setEditedText] = useState<string | null>(null);
@@ -25,27 +26,27 @@ export default function Page() {
   const [shareStatus, setShareStatus] = useState("PUBLIC");
   const [isSharing, setIsSharing] = useState(false);
   const router = useRouter();
-  const { toast } = useToast(); // Add this line
+  const { toast } = useToast();
 
   const onTextChange = (text: string) => {
     setEditedText(text);
     const words = text.trim().split(/\s+/);
-    setWordCount(words.length > 1 || words[0] !== '' ? words.length : 0);
-  }
+    setWordCount(words.length > 1 || words[0] !== "" ? words.length : 0);
+  };
 
   const handleTranslate = async () => {
     if (editedText) {
       try {
         setIsLoading(true);
-        const response = await fetch('/api/ai/banglish', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+        const response = await fetch("/api/ai/banglish", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ text: editedText }),
         });
         const data = await response.json();
         setTranslatedText(data.translatedText);
       } catch (error) {
-        console.error('Translation error:', error);
+        console.error("Translation error:", error);
       } finally {
         setIsLoading(false);
       }
@@ -61,9 +62,9 @@ export default function Page() {
 
     setIsSharing(true);
     try {
-      const response = await fetch('/api/ai/banglish/save-story', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const response = await fetch("/api/ai/banglish/save-story", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           rawText: editedText,
           translatedText,
@@ -77,7 +78,7 @@ export default function Page() {
           description: "Please sign in to share your story",
           variant: "destructive",
         });
-        router.push('/login');
+        router.push("/login");
         return;
       }
 
@@ -96,7 +97,7 @@ export default function Page() {
         });
       }
     } catch (error) {
-      console.error('Error sharing story:', error);
+      console.error("Error sharing story:", error);
       toast({
         title: "Error",
         description: "Something went wrong while sharing your story",
@@ -123,27 +124,27 @@ export default function Page() {
         <div className="relative grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Editor Section */}
           <div className="rounded-xl shadow-lg border p-6 min-h-[600px]  ">
-            <CustomEditor
+            {/* <CustomEditor
               className="prose max-w-none"
               id="composer"
               onMessageEdit={onTextChange}
-            />
+            /> */}
+            <BanglishEditor />
+
             <div className="mt-4 text-right">
-              <span className="text-sm text-gray-500">
-                {wordCount} words
-              </span>
+              <span className="text-sm text-gray-500">{wordCount} words</span>
             </div>
           </div>
 
           {/* Center Button */}
           <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-10 lg:block hidden">
-            <Button 
+            <Button
               onClick={handleTranslate}
               className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 transform transition-transform hover:scale-105 shadow-lg"
               disabled={isLoading}
               size="lg"
             >
-              {isLoading ? 'অনুবাদ হচ্ছে...' : 'অনুবাদ করুন'}
+              {isLoading ? "অনুবাদ হচ্ছে..." : "অনুবাদ করুন"}
             </Button>
           </div>
 
@@ -170,7 +171,9 @@ export default function Page() {
                 ) : translatedText ? (
                   <p className="whitespace-pre-wrap">{translatedText}</p>
                 ) : (
-                  <p className="text-gray-500 text-center">Translation will appear here</p>
+                  <p className="text-gray-500 text-center">
+                    Translation will appear here
+                  </p>
                 )}
               </div>
             </div>
@@ -178,13 +181,13 @@ export default function Page() {
 
           {/* Mobile Translation Button */}
           <div className="lg:hidden flex justify-center mt-4">
-            <Button 
+            <Button
               onClick={handleTranslate}
               className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 shadow-lg"
               disabled={isLoading}
               size="lg"
             >
-              {isLoading ? 'অনুবাদ হচ্ছে...' : 'অনুবাদ করুন'}
+              {isLoading ? "অনুবাদ হচ্ছে..." : "অনুবাদ করুন"}
             </Button>
           </div>
         </div>
@@ -196,7 +199,7 @@ export default function Page() {
           <DialogHeader>
             <DialogTitle>Share Your Story</DialogTitle>
           </DialogHeader>
-          
+
           <div className="space-y-4">
             <RadioGroup
               defaultValue={shareStatus}
@@ -225,10 +228,7 @@ export default function Page() {
             >
               Cancel
             </Button>
-            <Button
-              onClick={handleShareSubmit}
-              disabled={isSharing}
-            >
+            <Button onClick={handleShareSubmit} disabled={isSharing}>
               {isSharing ? "Sharing..." : "Share"}
             </Button>
           </DialogFooter>

@@ -6,20 +6,20 @@ import "@uploadthing/react/styles.css";
 import type { Metadata } from "next";
 import { Noto_Sans_Bengali, Galada } from "next/font/google";
 import "./globals.css";
-import './base-editor.css';
-import './editor.css';
+import "./base-editor.css";
+import "./editor.css";
 import { getServerSession } from "next-auth";
 
 const notoSansBengali = Noto_Sans_Bengali({
-  weight: ['400', '500', '600', '700'],
-  subsets: ['bengali'],
-  variable: '--font-noto-bengali',
+  weight: ["400", "500", "600", "700"],
+  subsets: ["bengali"],
+  variable: "--font-noto-bengali",
 });
 
 const galada = Galada({
-  weight: ['400'],
-  subsets: ['latin'],
-  variable: '--font-galada',
+  weight: ["400"],
+  subsets: ["latin"],
+  variable: "--font-galada",
 });
 
 export const metadata: Metadata = {
