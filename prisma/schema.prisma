@@ -78,7 +78,7 @@ model Story {
   id         String   @id @default(cuid())
   title      String
   content    String
-  authorId   String
+  authorId   String 
   status     STATUS    @default(PRIVATE)
   liked      Int      @default(0)
   comments   Comment[] 
