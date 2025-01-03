@@ -9,6 +9,7 @@ import "./globals.css";
 import "./base-editor.css";
 import "./editor.css";
 import { getServerSession } from "next-auth";
+import ThemeLayout from "@/components/layout/theme-layout";
 
 const notoSansBengali = Noto_Sans_Bengali({
   weight: ["400", "500", "600", "700"],
@@ -39,7 +40,8 @@ export default async function RootLayout({
         <Providers session={session}>
           <Toaster />
           <Header />
-          {children}
+          <ThemeLayout>{children}</ThemeLayout>
+          
         </Providers>
       </body>
     </html>
