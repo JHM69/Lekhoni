@@ -64,7 +64,7 @@ export default function AuthenticationPage() {
 
           <p className="text-center text-sm text-muted-foreground">
             একাউন্ট নেই?{" "}
-            <Link href="/examples/authentication/signup" className="text-accent">
+            <Link href="/signup" className="text-accent">
               সাইন আপ করুন
             </Link>
           </p>
