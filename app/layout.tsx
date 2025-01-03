@@ -6,8 +6,7 @@ import "@uploadthing/react/styles.css";
 import type { Metadata } from "next";
 import { Noto_Sans_Bengali, Galada } from "next/font/google";
 import "./globals.css";
-import "./base-editor.css";
-import "./editor.css";
+ 
 import { getServerSession } from "next-auth";
 import ChatPopup from "@/components/layout/chat_popup";
 import ThemeLayout from "@/components/layout/theme-layout";

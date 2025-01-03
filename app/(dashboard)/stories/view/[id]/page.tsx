@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
@@ -16,45 +16,11 @@ import {
   Send,
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 import { motion } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
-
-// Dummy story data
-const dummyStory = {
-  id: "1",
-  title: "নীল জলের গভীরে",
-  content: `<p>সমুদ্রের গভীরে লুকিয়ে থাকা এক অজানা রহস্যের গল্প। একদল গবেষক তাদের অভিযানে যা আবিষ্কার করলেন, তা তাদের জীবন চিরদিনের জন্য বদলে দিল...</p>
-  <p>গভীর সমুদ্রের নীল জলে ডুব দিয়ে তারা খুঁজে পেল এক প্রাচীন সভ্যতার ধ্বংসাবশেষ। সেখানে ছিল অজানা লিপিতে লেখা কিছু তথ্য, যা বর্তমান বিজ্ঞানের সীমানা ছাড়িয়ে যায়...</p>
-  <p>প্রতিদিন নতুন নতুন আবিষ্কার তাদের আরও গভীরে টেনে নিয়ে যেতে থাকে। কিন্তু সেই গভীরে লুকিয়ে আছে এমন কিছু, যা মানবজাতির জন্য হুমকি হয়ে উঠতে পারে...</p>`,
-  author: {
-    id: "1",
-    name: "তানভীর আহমেদ",
-    image: "https://api.dicebear.com/7.x/personas/svg?seed=tanvir",
-    bio: "বাংলা সাহিত্যের একজন উদীয়মান লেখক। রহস্য ও এডভেঞ্চার গল্প লেখায় বিশেষ দক্ষ।",
-    followers: 1234,
-    storiesCount: 45,
-  },
-  thumbnail: "https://random.imagecdn.app/1200/400?ocean,underwater",
-  category: "রহস্য",
-  readTime: "৮ মিনিট",
-  createdAt: new Date("2024-01-15"),
-  likes: 234,
-  comments: [
-    {
-      id: "1",
-      user: {
-        id: "2",
-        name: "সাদিয়া আহমেদ",
-        image: "https://api.dicebear.com/7.x/personas/svg?seed=sadia",
-      },
-      content: "দারুণ গল্প! পরের পর্বের জন্য অপেক্ষায় রইলাম।",
-      createdAt: new Date("2024-01-16"),
-      likes: 12,
-    },
-    // Add more comments as needed
-  ],
-};
+import axios from "axios";
+import { useSession } from "next-auth/react";
 
 const similarStories = [
   {
@@ -79,10 +45,35 @@ const trendingStories = [
 ];
 
 export default function StoryViewPage() {
+  const [story, setStory] = useState(null);
+  const [author , setAuthor] = useState(null);
   const [comment, setComment] = useState("");
   const [isLiked, setIsLiked] = useState(false);
   const [isBookmarked, setIsBookmarked] = useState(false);
   const router = useRouter();
+  const params = useParams();
+  const id = params?.id;
+
+  const user = useSession().data?.user;
+  useEffect(() => {
+    if (id) {
+      axios.get(`/api/story/single?storyId=${String(id)}`)
+        .then(response => {
+          if (response.data.status === "success") {
+            console.log("Story Fetched from Database", response.data.story);
+            setStory(response.data.story[0]);
+            setAuthor(response.data.author);
+          }
+        })
+        .catch(error => {
+          console.error("Error fetching story data:", error);
+        });
+    }
+  }, [id]);
+
+  if (!story) {
+    return <div>Loading...</div>;
+  }
 
   const goToProfile = (userId: string) => {
     router.push(`/profile/view/${userId}`);
@@ -102,24 +93,24 @@ export default function StoryViewPage() {
               className="space-y-4"
             >
               <h1 className="font-galada text-4xl md:text-5xl font-bold text-primary">
-                {dummyStory.title}
+                {story.title}
               </h1>
               
               {/* Author info and metadata */}
               <div className="flex items-center justify-between py-4 border-y border-shadcn-primary/30">
                 <div className="flex items-center gap-4">
-                  <Avatar className="h-12 w-12 cursor-pointer" onClick={() => goToProfile(dummyStory.author.id)}>
-                    <AvatarImage src={dummyStory.author.image} />
-                    <AvatarFallback>{dummyStory.author.name[0]}</AvatarFallback>
+                  <Avatar className="h-12 w-12 cursor-pointer" onClick={() => goToProfile(author?.id)}>
+                    <AvatarImage src={author?.image} />
+                    <AvatarFallback>{author?.name}</AvatarFallback>
                   </Avatar>
                   <div>
-                    <h3 className="font-semibold text-primary">{dummyStory.author.name}</h3>
+                    <h3 className="font-semibold text-primary">{author?.name}</h3>
                     <div className="flex items-center gap-4 text-sm text-shadcn-muted">
                       <span className="flex items-center gap-1">
                         <Clock className="w-4 h-4" />
-                        {dummyStory.readTime}
+                        {story.readTime}
                       </span>
-                      <span>{format(dummyStory.createdAt, 'PP')}</span>
+                      <span>{format(new Date(story.createdAt), 'PP')}</span>
                     </div>
                   </div>
                 </div>
@@ -132,8 +123,8 @@ export default function StoryViewPage() {
             {/* Featured Image */}
             <div className="relative h-[400px] rounded-lg overflow-hidden">
               <Image
-                src={dummyStory.thumbnail}
-                alt={dummyStory.title}
+                src={story.thumbnail}
+                alt={story.title}
                 fill
                 className="object-cover"
               />
@@ -141,7 +132,7 @@ export default function StoryViewPage() {
 
             {/* Story Content */}
             <article className="prose prose-invert max-w-none">
-              <div dangerouslySetInnerHTML={{ __html: dummyStory.content }} />
+              <div dangerouslySetInnerHTML={{ __html: story.content }} />
             </article>
 
             {/* Enhanced Reactions Bar */}
@@ -156,11 +147,11 @@ export default function StoryViewPage() {
                   onClick={() => setIsLiked(!isLiked)}
                 >
                   <Heart className={`w-5 h-5 ${isLiked ? 'fill-current' : ''}`} />
-                  <span>{dummyStory.likes}</span>
+                  <span>{story?.likes}</span>
                 </Button>
                 <Button variant="ghost" className="flex items-center gap-2">
                   <MessageCircle className="w-5 h-5" />
-                  <span>{dummyStory.comments.length}</span>
+                  <span>{story?.comments?.length}</span>
                 </Button>
               </div>
               <div className="flex items-center gap-4">
@@ -176,6 +167,15 @@ export default function StoryViewPage() {
                   <Bookmark className={`w-5 h-5 ${isBookmarked ? 'fill-current' : ''}`} />
                   Save
                 </Button>
+                {author?.id === user?.id && (
+                  <Button
+                    variant="ghost"
+                    className="flex items-center gap-2"
+                    onClick={() => router.push(`/stories/edit/${id}`)}
+                  >
+                    Edit
+                  </Button>
+                )}
               </div>
             </motion.div>
 
@@ -191,7 +191,7 @@ export default function StoryViewPage() {
               {/* Comment Input */}
               <div className="flex gap-4">
                 <Avatar className="h-10 w-10">
-                  <AvatarImage src="https://api.dicebear.com/7.x/personas/svg?seed=user" />
+                  <AvatarImage src={user?.image} />
                   <AvatarFallback>U</AvatarFallback>
                 </Avatar>
                 <div className="flex-1 space-y-2">
@@ -210,7 +210,7 @@ export default function StoryViewPage() {
 
               {/* Comments List */}
               <div className="space-y-4 mt-8">
-                {dummyStory.comments.map((comment) => (
+                {story?.comments?.map((comment) => (
                   <div key={comment.id} className="flex gap-4">
                     <Avatar className="h-10 w-10 cursor-pointer" onClick={() => goToProfile(comment.user.id)}>
                       <AvatarImage src={comment.user.image} />
@@ -220,7 +220,7 @@ export default function StoryViewPage() {
                       <div className="flex items-center justify-between">
                         <h4 className="font-semibold text-primary">{comment.user.name}</h4>
                         <span className="text-xs text-shadcn-muted">
-                          {format(comment.createdAt, 'PP')}
+                          {format(new Date(comment.createdAt), 'PP')}
                         </span>
                       </div>
                       <p>{comment.content}</p>
@@ -242,20 +242,20 @@ export default function StoryViewPage() {
               <CardContent className="p-6 space-y-4">
                 <div className="text-center space-y-4">
                   <Avatar className="h-24 w-24 mx-auto">
-                    <AvatarImage src={dummyStory.author.image} />
-                    <AvatarFallback>{dummyStory.author.name[0]}</AvatarFallback>
+                    <AvatarImage src={author?.image} />
+                    <AvatarFallback>{author?.name[0]}</AvatarFallback>
                   </Avatar>
                   <div>
-                    <h3 className="text-xl font-semibold text-primary">{dummyStory.author.name}</h3>
-                    <p className="text-shadcn-muted text-sm">{dummyStory.author.bio}</p>
+                    <h3 className="text-xl font-semibold text-primary">{author?.name}</h3>
+                    <p className="text-shadcn-muted text-sm">{author?.bio}</p>
                   </div>
                   <div className="flex justify-center gap-6 text-sm">
                     <div>
-                      <p className="font-semibold text-primary">{dummyStory.author.followers}</p>
+                      <p className="font-semibold text-primary">{author?.followers}</p>
                       <p className="text-shadcn-muted">অনুসারী</p>
                     </div>
                     <div>
-                      <p className="font-semibold text-primary">{dummyStory.author.storiesCount}</p>
+                      <p className="font-semibold text-primary">{author?.storiesCount}</p>
                       <p className="text-shadcn-muted">গল্প</p>
                     </div>
                   </div>

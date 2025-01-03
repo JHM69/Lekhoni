@@ -55,7 +55,7 @@ export default function ChatPopup() {
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
                     >
-                      <Link href="/chat">
+                      <Link href="/chat-bot">
                         <Button variant="ghost" size="sm">
                           <ExternalLink className="h-4 w-4" />
                         </Button>

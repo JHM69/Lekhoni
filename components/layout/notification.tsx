@@ -11,14 +11,13 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Icons } from "../icons";
 import { trpc } from "@/utils/trpc";
-import { Loader2 } from "lucide-react";
-import { Notification } from "@prisma/client";
+import { Loader2 } from "lucide-react"; 
 
 interface Notification {
   id: string;
   message: string;
   read: boolean;
-  createdat: string;
+  createdAt: string;
 }
 
 export function Notifications() {
