@@ -1,9 +1,14 @@
 import OpenAI from "openai";
+import * as lancedb from "@lancedb/lancedb";
 
 // Initialize OpenAI client
 export const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
+
+// Initialize a common LanceDB instance
+const uri = "/tmp/lancedb/";
+export const dbPromise = lancedb.connect(uri);
 
 // Helper to generate embeddings using OpenAI
 export async function generateEmbedding(text: string) {
