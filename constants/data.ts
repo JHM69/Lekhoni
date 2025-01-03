@@ -24,21 +24,21 @@ export const navItems: NavItem[] = [
   
   {
     title: "Chat Bot",
-    href: "/write/chat-bot",
+    href: "/chat-bot",
     icon: "analytics",
     label: "Ai Helper",
   },
 
   {
     title: "Story",
-    href: "/write/Stories",
+    href: "/stories",
     icon: "story",
     label: "Stories",
   },
  
   {
     title: "Setting",
-    href: "/trip/settings",
+    href: "/settings",
     icon: "Settings",
     label: "setting",
   },

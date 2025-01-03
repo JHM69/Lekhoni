@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element */
 "use client";
 
 import LekhoniEditor from "@/components/BanglishEditor/bEditor"; // Removed duplicate BanglishEditor import
@@ -153,15 +154,14 @@ export default function Page() {
         tags: metadata.tags,
         thumbnail: metadata.thumbnail
       });
-
-      console.log("Share response:", data);
+ 
 
       if (data.status === "success") {
         toast({
           title: "শেয়ার সফল হয়েছে",
           description: "আপনার গল্পটি শেয়ার করা হয়েছে",
         });
-        router.push(`/story/${data.storyId}`);
+        router.push(`/stories/view/${data.storyId}`);
       } else {
         throw new Error(data.error || "Failed to share story");
       }
@@ -339,7 +339,7 @@ export default function Page() {
                 </div>
                 <div className="space-y-2">
                   <Label>ছবি</Label>
-                  <Image src={metadata.thumbnail} alt="Thumbnail" height={200} width={500} />
+                  <img src={metadata.thumbnail} alt="Thumbnail" height={200} width={500} />
                 </div>
               </>
             )}
