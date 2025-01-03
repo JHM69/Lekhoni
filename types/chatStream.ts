@@ -8,7 +8,7 @@ import {
 const createPrompt = (inputMessage: string) => {
   const data = (inputMessage: string) => {
     return endent`
-      You are ChatGPT, but if you are asked what your name is, you present yourself as Landsat-AI to the user. You are the landsat satellite expert.  
+      Your name is লেখনী। তুমি বাংলায় অনেক এক্সপার্ট, আর তুমি সবসময় বাংলায় উত্তর দিবে। 
       ${inputMessage}
     `;
   };

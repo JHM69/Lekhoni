@@ -20,6 +20,12 @@ import {
   Menu,
   Mountain as MountainIcon,
   X,
+  PenLine,
+  MessageSquare,
+  Mic,
+  MicOff,
+  PenBoxIcon,
+  PenToolIcon,
 } from "lucide-react";
 import {
   Tooltip,
@@ -28,111 +34,117 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import ReactMarkdown from "react-markdown";
-
-const breadcrumbItems = [
-  { title: "Dashboard", link: "/dashboard" },
-  { title: "Travel Assistant", link: "/dashboard/travel-assistant" },
-];
-
+import { ChatBody } from "@/types/types";
+ 
 const suggestions = [
   {
-    text: "What's the best time to visit Bali?",
-    icon: <Calendar className="w-4 h-4" />,
+    text: "গল্পের প্লট সাজেস্ট করুন",
+    icon: <PenLine className="w-4 h-4" />,
   },
   {
-    text: "Suggest a 5-day itinerary in Thailand",
-    icon: <MapPin className="w-4 h-4" />,
+    text: "রোমান্টিক গল্প লেখার টিপস দিন",
+    icon: <MessageSquare className="w-4 h-4" />,
   },
   {
-    text: "Luxury hotels in Maldives",
-    icon: <Hotel className="w-4 h-4" />,
-  },
-  {
-    text: "Group tour packages for Europe",
+    text: "আমার গল্পের ক্যারেক্টার ডেভেলপ করুন",
     icon: <Users className="w-4 h-4" />,
+  },
+  {
+    text: "একটি থ্রিলার গল্পের আইডিয়া দিন",
+    icon: <Mountain className="w-4 h-4" />,
   },
 ];
 
 export default function Page() {
   const [messages, setMessages] = useState<
     Array<{
-      type: "user" | "assistant";
+      type: "USER" | "AI";
       content: string;
     }>
   >([]);
 
-  const [tripData, setTripData] = useState(null);
+  const model = "gpt-3.5-turbo";  //also can ne gpt-4o
 
-  useEffect(() => {
-    const savedTrip = localStorage.getItem("tripPlan");
-    if (savedTrip) {
-      const parsedData = JSON.parse(savedTrip);
-      setTripData(parsedData);
-    }
-  }, []);
+ 
 
-  const [inputMessage, setInputMessage] = useState("Hello");
+  const [inputMessage, setInputMessage] = useState("");
   const [loading, setLoading] = useState(false);
   const [isUploadOpen, setIsUploadOpen] = useState(false);
   const [isMobileQuickActionsOpen, setIsMobileQuickActionsOpen] =
     useState(false);
+  const [isRecording, setIsRecording] = useState(false);
 
-  const handleSend = async () => {
-    if (!inputMessage.trim()) return;
 
-    setMessages((prev) => [
-      ...prev,
-      {
-        type: "user",
-        content: inputMessage,
-      },
-    ]);
+  const handleTranslate = async () => {
+    const maxCodeLength = 700;
 
-    setLoading(true);
-    try {
-      const python_server_url = process.env.PYTHON_SERVER_URL;
-      const response = await fetch(
-        python_server_url+ "/qna/invoke",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            input: {
-              context: "My Trip Plan Data is Here: "+ JSON.stringify(tripData),
-              question: inputMessage,
-            },
-          }),
-        },
+    if (!inputMessage) {
+      alert("Please enter your message.");
+      return;
+    }
+
+    if (inputMessage.length > maxCodeLength) {
+      alert(
+        `Please enter a message less than ${maxCodeLength} characters. You are currently at ${inputMessage.length} characters.`,
       );
+      return;
+    }
+    
+    setMessages([...messages, { type: "USER", content: inputMessage }]);
+   
+    setLoading(true);
 
-      if (!response.ok) throw new Error("Failed to get response");
+    const controller = new AbortController();
+    const body: ChatBody = {
+      inputMessage,
+      model,
+    };
 
-      const data = await response.json();
-
-      console.log(data);
-      setMessages((prev) => [
-        ...prev,
-        {
-          type: "assistant",
-          content:
-            data.output || "I'm here to help you plan your perfect trip!",
+    try {
+      const response = await fetch("/api/ai-chat", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
         },
+        signal: controller.signal,
+        body: JSON.stringify(body),
+      });
+
+      console.log(response);
+
+      if (!response.ok) {
+        throw new Error("API request failed");
+      }
+
+      const data = response.body;
+      if (!data) {
+        throw new Error("No data received");
+      }
+
+      const reader = data.getReader();
+      const decoder = new TextDecoder();
+      let done = false;
+      let accumulatedResponse = "";
+
+      while (!done) {
+        const { value, done: doneReading } = await reader.read();
+        done = doneReading;
+        const chunkValue = decoder.decode(value);
+        accumulatedResponse += chunkValue;
+       
+      }
+
+      setMessages([
+        ...messages,
+        { type: "USER", content: inputMessage },
+        { type: "AI", content: accumulatedResponse },
       ]);
+      setInputMessage("");
     } catch (error) {
-      console.error("Error:", error);
-      setMessages((prev) => [
-        ...prev,
-        {
-          type: "assistant",
-          content:
-            "I am your AI Tour Guide, But I am unable to respond right now. Please try again later.",
-        },
-      ]);
+      console.error("Error in API call:", error);
+      alert("Something went wrong. Please try again.");
     } finally {
       setLoading(false);
-      setInputMessage("");
     }
   };
 
@@ -144,18 +156,22 @@ export default function Page() {
     }
   };
 
-  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      handleSend();
-    }
+  // const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+  //   if (e.key === "Enter" && !e.shiftKey) {
+  //     e.preventDefault();
+  //     handleSend();
+  //   }
+  // };
+
+  const handleVoiceInput = () => {
+    setIsRecording(!isRecording);
+    // Add voice recognition logic here
   };
 
   return (
     <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
       <div className="flex items-center justify-between">
-        <BreadCrumb items={breadcrumbItems} />
-
+        
         {/* Mobile Quick Actions Button */}
         <Button
           variant="ghost"
@@ -210,26 +226,20 @@ export default function Page() {
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card className="md:col-span-3 p-4">
-          {/* Main Content */}
-          <div className="flex items-center space-x-2 mb-6">
-            <Plane className="w-8 h-8 text-blue-500" />
-            <h1 className="text-2xl font-bold">Travel Companion</h1>
-          </div>
-
-          <ScrollArea className="h-[calc(100vh-300px)]">
+          <ScrollArea className="h-[calc(100vh-300px)] mb-4 px-4">
             {messages.length === 0 ? (
               <div className="space-y-6">
                 <div className="text-center">
                   <div className="flex justify-center space-x-2 mb-4">
-                    <MountainIcon className="w-8 h-8 text-green-500" />
-                    <Mountain className="w-8 h-8 text-blue-500" />
+                    <PenLine className="w-8 h-8 text-blue-500" />
+                    <MessageSquare className="w-8 h-8 text-green-500" />
                   </div>
                   <h2 className="text-xl font-semibold mb-2">
-                    Welcome to Your Travel Companion!
+                    চ্যাট করুন যেকোনো বিষয়ে
                   </h2>
                   <p className="text-gray-600 dark:text-gray-400 mb-6">
-                    I can help you plan trips, find accommodations, and provide
-                    local insights.
+                    লেখনী চ্যাট বট আপনার সাথে কনভার্সেশন সংরক্ষণ করে। এর ফলে
+                    ভবিষ্যতে আপনার প্রশ্নের উত্তর প্রদান করা সহজ হবে।
                   </p>
                 </div>
 
@@ -253,12 +263,12 @@ export default function Page() {
                   <div
                     key={index}
                     className={`flex ${
-                      message.type === "user" ? "justify-end" : "justify-start"
+                      message.type === "USER" ? "justify-end" : "justify-start"
                     }`}
                   >
                     <div
                       className={`flex items-start space-x-2 max-w-[80%] ${
-                        message.type === "user"
+                        message.type === "USER"
                           ? "flex-row-reverse space-x-reverse"
                           : ""
                       }`}
@@ -266,26 +276,25 @@ export default function Page() {
                       <Avatar>
                         <div
                           className={`w-full h-full rounded-full flex items-center justify-center ${
-                            message.type === "user"
+                            message.type === "USER"
                               ? "bg-blue-500"
                               : "bg-green-500"
                           }`}
                         >
-                          {message.type === "user" ? (
+                          {message.type === "USER" ? (
                             <Users className="w-4 h-4 text-white" />
                           ) : (
-                            <Plane className="w-4 h-4 text-white" />
+                            <PenToolIcon className="w-4 h-4 text-white" />
                           )}
                         </div>
                       </Avatar>
                       <div
                         className={`rounded-lg p-3 ${
-                          message.type === "user"
+                          message.type === "USER"
                             ? "bg-blue-500 text-white"
                             : "bg-gray-100 dark:bg-gray-800"
                         }`}
                       >
-                    
                         <ReactMarkdown>{message.content}</ReactMarkdown>
                       </div>
                     </div>
@@ -295,49 +304,75 @@ export default function Page() {
             )}
           </ScrollArea>
 
-          <div className="flex flex-row justify-between w-full items-center mt-4 space-x-2">
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    onClick={() => setIsUploadOpen(!isUploadOpen)}
-                  >
-                    <ImageIcon className="w-5 h-5" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>Upload travel image</TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-
-            <Input
-              placeholder="Ask about your next adventure..."
-              value={inputMessage}
-              onChange={(e) => setInputMessage(e.target.value)}
-              onKeyPress={handleKeyPress}
-              className="flex-1 min-w-[700px]"
-            />
-
-            <Button onClick={handleSend} disabled={loading}>
-              {loading ? (
-                <Loader2 className="w-5 h-5 animate-spin" />
-              ) : (
-                <Send className="w-5 h-5" />
+          <div className=" w-full  p-4">
+            <div className="flex flex-row w-full items-center justify-between space-x-2 rounded-lg border bg-white dark:bg-gray-800 p-2">
+              {isUploadOpen && (
+                <Input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageUpload}
+                  className="hidden"
+                  id="image-upload"
+                />
               )}
-            </Button>
-          </div>
 
-          {isUploadOpen && (
-            <div className="mt-2">
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="hover:bg-gray-100 w-2/12 dark:hover:bg-gray-700"
+                      onClick={() => setIsUploadOpen(!isUploadOpen)}
+                    >
+                      <ImageIcon className="w-5 h-5" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>Upload image</TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+
               <Input
-                type="file"
-                accept="image/*"
-                onChange={handleImageUpload}
-                className="w-full"
+                placeholder="আপনার প্রশ্ন লিখুন..."
+                value={inputMessage}
+                onChange={(e) => setInputMessage(e.target.value)}
+                // onKeyPress={handleKeyPress}
+                className="md:w-[600px] lg:w-[800px] w-[300px] border-0 focus-visible:ring-0 focus-visible:ring-offset-0"
               />
+
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="hover:bg-gray-100 w-2/12 dark:hover:bg-gray-700"
+                      onClick={handleVoiceInput}
+                    >
+                      {isRecording ? (
+                        <MicOff className="w-5 h-5 text-red-500" />
+                      ) : (
+                        <Mic className="w-5 h-5" />
+                      )}
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>Voice input</TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+
+              <Button
+                onClick={handleTranslate}
+                disabled={loading}
+                className="bg-blue-500 w-2/12 hover:bg-blue-600 text-white"
+              >
+                {loading ? (
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                ) : (
+                  <Send className="w-5 h-5" />
+                )}
+              </Button>
             </div>
-          )}
+          </div>
         </Card>
 
         {/* Desktop Quick Actions */}

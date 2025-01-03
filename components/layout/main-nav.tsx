@@ -48,11 +48,11 @@ const Header = () => {
         </div>
         <div className="flex items-center gap-4">
           <form onSubmit={handleSearch} className="relative hidden md:flex items-center">
-            <Search className="absolute left-3 h-4 w-4 text-muted-foreground" />
+            <Search className="absolute left-8 h-4 w-4  " />
             <Input
               type="search"
               placeholder="গল্প খুঁজুন..."
-              className="w-[300px] pl-9 rounded-full bg-muted/50"
+              className="w-[300px] pl-12 rounded-full bg-muted/50"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
