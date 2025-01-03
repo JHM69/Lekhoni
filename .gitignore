@@ -4,6 +4,11 @@
 /node_modules
 /.pnp
 .pnp.js
+pretained-model/myenv
+pretained-model/app/__pycache__
+pretained-model/app/routes/__pycache__
+pretained-model/app/utils/__pycache__
+
 
 # testing
 /coverage
