@@ -33,13 +33,13 @@ export const authOptions: NextAuthOptions = {
         email: {
           label: "email",
           type: "email",
-          placeholder: "landsat@gmail.com",
+          placeholder: "tw@gmail.com",
         },
       },
       async authorize(credentials, req) {
         const user = { id: "5", name: "Test User", email: credentials?.email };
-        // if credentials?.email not equal to landsat@gmail.com then return null
-        if (credentials?.email !== "landsat@gmail.com") {
+        // if credentials?.email not equal to tw@gmail.com then return null
+        if (credentials?.email !== "tw@gmail.com") {
           return null;
         }
         if (user) {
@@ -51,12 +51,12 @@ export const authOptions: NextAuthOptions = {
             update: {
               email: user.email,
               name: user.name, 
-              passwordHash: "landsat",
+              passwordHash: "tw",
             },
             create: {
               email: user.email as string,
               name: user.name,
-              passwordHash: "landsat",
+              passwordHash: "tw",
             },
           });
           return user;

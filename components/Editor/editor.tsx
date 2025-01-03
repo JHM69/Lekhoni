@@ -4,8 +4,7 @@
 import Header from '@editorjs/header';
 import Paragraph from '@editorjs/paragraph';
 import Underline from '@editorjs/underline';
-
-import P from './image.js';
+ 
 import InlineCode from '@editorjs/inline-code';
 
 import axios from 'axios';
@@ -51,29 +50,7 @@ const CustomEditor: React.FC<any> = ({
     underline: Underline,
     tabble : Table,
     title: Title,
-    image: {
-      class: P,
-      shortcut: 'CMD+SHIFT+I',
-      config: {
-        uploader: {
-          async uploadByFile(file: any) {
-            let formData = new FormData();
-            formData.append('file', file);
-            const { data } = await axios.post('/api/upload', formData);
-           
-            imageArray.push(data.downloadUrl);
-            return {
-              success: true,
-              file: {
-                url: data.downloadUrl,
-              },
-              categories: data.tags,
-            };
-          },
-        },
-      },
-    },
-   
+    
     // reminder: Reminder,
     header: {
       class: Header,
@@ -126,7 +103,7 @@ const CustomEditor: React.FC<any> = ({
          
           const response = await editor.save();
           const onlyText = getFormattedData(response?.blocks);
-          console.log("onlyText : ", response?.blocks);
+         
           if (onMessageEdit) {
             onMessageEdit(onlyText);
           }
