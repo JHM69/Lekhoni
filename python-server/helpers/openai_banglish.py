@@ -7,13 +7,13 @@ import os
 model = ChatOpenAI(model="gpt-4o", api_key=API_KEYS["openai"])
 
 def convert_to_bangla(text, parser=None):
-    if parser is None:
-        format_instructions = "give the data in plain text"
-    else :
-        format_instructions = parser.get_format_instructions()
+    # if parser is None:
+    #     format_instructions = "give the data in plain text"
+    # else :
+    #     format_instructions = parser.get_format_instructions()
 
     message = HumanMessage(
-        content=f"Translate the following text to Bangla: {text}. Do not alter any word. {format_instructions}"
+        content=f"Translate the following text to Bangla: {text}. Do not alter any word."
     )
 
     response = model.invoke([message])
