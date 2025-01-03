@@ -17,7 +17,7 @@ export interface TranslateBody {
 export interface ChatBody {
   inputMessage: string;
   model: OpenAIModel;
-  apiKey?: string | undefined | null;
+  history: String | undefined;
 }
 export interface TranslateResponse {
   code: string;
