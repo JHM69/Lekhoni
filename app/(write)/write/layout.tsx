@@ -5,12 +5,9 @@ import Sidebar from "@/components/layout/sidebar";
 import { TrpcProvider } from "@/utils/trpc-provider";
 import { useSession } from "next-auth/react";
 
-// export const metadata: Metadata = {
-//   title: "Easy Trip",
-//   description: "Quantum Guys",
-// };
+  
 
-export default function TripLayout({
+export default function WritingLayout({
   children,
 }: {
   children: React.ReactNode;
