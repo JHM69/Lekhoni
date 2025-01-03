@@ -15,6 +15,7 @@ import {
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { useRouter } from "next/navigation";
+import axios from 'axios';
 
 export default function Page() {
   const [editedText, setEditedText] = useState<string | null>(null);
@@ -34,21 +35,39 @@ export default function Page() {
   }
 
   const handleTranslate = async () => {
-    if (editedText) {
-      try {
-        setIsLoading(true);
-        const response = await fetch('/api/ai/banglish', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ text: editedText }),
-        });
-        const data = await response.json();
-        setTranslatedText(data.translatedText);
-      } catch (error) {
-        console.error('Translation error:', error);
-      } finally {
-        setIsLoading(false);
+    if (!editedText) {
+      toast({
+        title: "Error",
+        description: "Please enter some text to translate",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+      console.log('Sending translation request:', editedText);
+      
+      const { data } = await axios.post('/api/ai/banglish', {
+        text: editedText
+      });
+      
+      console.log('Translation response:', data);
+      
+      if (!data.translatedText) {
+        throw new Error('No translated text received');
       }
+
+      setTranslatedText(data.translatedText);
+    } catch (error) {
+      console.error('Translation error:', error);
+      toast({
+        title: "Translation Failed",
+        description: "Failed to translate text. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -57,21 +76,43 @@ export default function Page() {
   };
 
   const handleShareSubmit = async () => {
-    if (!translatedText || !editedText) return;
+    if (!translatedText || !editedText) {
+      toast({
+        title: "Error",
+        description: "Both original and translated text are required",
+        variant: "destructive",
+      });
+      return;
+    }
 
     setIsSharing(true);
     try {
-      const response = await fetch('/api/ai/banglish/save-story', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          rawText: editedText,
-          translatedText,
-          status: shareStatus,
-        }),
+      console.log('Sending share request:', {
+        rawText: editedText,
+        translatedText,
+        status: shareStatus,
       });
 
-      if (response.status === 401) {
+      const { data } = await axios.post('/api/story', {
+        rawText: editedText,
+        translatedText,
+        status: shareStatus,
+      });
+
+      console.log('Share response:', data);
+
+      if (data.status === "success") {
+        toast({
+          title: "Success",
+          description: "Your story has been shared successfully",
+        });
+        router.push(`/story/${data.storyId}`);
+      } else {
+        throw new Error(data.error || "Failed to share story");
+      }
+    } catch (error) {
+      console.error('Share error:', error);
+      if (axios.isAxiosError(error) && error.response?.status === 401) {
         toast({
           title: "Authentication Required",
           description: "Please sign in to share your story",
@@ -80,28 +121,8 @@ export default function Page() {
         router.push('/login');
         return;
       }
-
-      const data = await response.json();
-      if (data.status === "success") {
-        toast({
-          title: "Success",
-          description: "Your story has been shared successfully",
-        });
-        router.push(`/story/${data.storyId}`);
-      } else {
-        toast({
-          title: "Error",
-          description: data.error || "Failed to share story",
-          variant: "destructive",
-        });
-      }
-    } catch (error) {
-      console.error('Error sharing story:', error);
-      toast({
-        title: "Error",
-        description: "Something went wrong while sharing your story",
-        variant: "destructive",
-      });
+      console.error('Share error:', error);
+      
     } finally {
       setIsSharing(false);
       setIsShareDialogOpen(false);
@@ -214,7 +235,7 @@ export default function Page() {
             </RadioGroup>
 
             <div className="max-h-[300px] overflow-y-auto border rounded-md p-4">
-              <p className="whitespace-pre-wrap">{translatedText}</p>
+              <input type="text" value={translatedText} className="whitespace-pre-wrap"></input>
             </div>
           </div>
 
