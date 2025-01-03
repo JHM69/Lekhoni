@@ -2,7 +2,7 @@
 
 import LekhoniEditor from "@/components/BanglishEditor/bEditor"; // Removed duplicate BanglishEditor import
 import { Button } from "@/components/ui/button";
-import { LanguagesIcon, Share, Copy, Globe2, Lock } from "lucide-react"; // Add this import with other Lucide icons
+import { LanguagesIcon, Share, Copy, Globe2, Lock, Send } from "lucide-react"; // Add this import with other Lucide icons
 import { useState } from "react";
 import { useToast } from "@/components/ui/use-toast"; // Add this import
 import {
@@ -164,6 +164,11 @@ export default function Page() {
     await fetchMetadata();
   };
 
+  const handleFeedbackClick = async () => {
+    const feedbackUrl = `/feedback?input=${encodeURIComponent(editedText)}&output=${encodeURIComponent(translatedText || '')}`;
+    window.open(feedbackUrl, "_blank");
+  };
+
   const handleShareSubmit = async () => {
     if (!translatedText || !editedText) {
       toast({
@@ -308,6 +313,13 @@ export default function Page() {
                       >
                         <Share size={18} className="text-gray-100" />
                         <span className="ml-2 font-bold text-gray-100">শেয়ার করুন</span>
+                      </Button>
+                      <Button
+                        className="flex items-end flex-row bg-green-800 dark:bg-green-700 hover:dark:bg-green-700"
+                        onClick={handleFeedbackClick} // Fixed handler name
+                      >
+                        <Send size={18} className="text-gray-100" />
+                        <span className="ml-2 font-bold text-gray-100">প্রতিক্রিয়া</span>
                       </Button>
                     </div>
 
