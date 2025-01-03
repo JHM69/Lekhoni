@@ -131,17 +131,17 @@ export async function GET(request: NextRequest) {
         .limit(limit);
 
       // Apply sorting
-      switch (sortBy) {
-        case 'latest':
-          query = query.orderBy('createdAt', 'desc');
-          break;
-        case 'popular':
-          query = query.orderBy('liked', 'desc');
-          break;
-        case 'oldest':
-          query = query.orderBy('createdAt', 'asc');
-          break;
-      }
+      // switch (sortBy) {
+      //   case 'latest':
+      //     query = query.orderBy('createdAt', 'desc');
+      //     break;
+      //   case 'popular':
+      //     query = query.orderBy('liked', 'desc');
+      //     break;
+      //   case 'oldest':
+      //     query = query.orderBy('createdAt', 'asc');
+      //     break;
+      // }
     }
 
     const stories = await query
@@ -153,10 +153,15 @@ export async function GET(request: NextRequest) {
       ])
       .toArray();
 
+    console.log({stories});
+
     const formattedStories = stories.map((story: Story) => ({
       ...story,
       ...(searchQuery && { similarity: story._distance }),
     }));
+
+
+    console.log({formattedStories});
 
     return NextResponse.json(
       { status: "success", stories: formattedStories },
