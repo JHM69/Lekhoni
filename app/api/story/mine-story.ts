@@ -1,15 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { OpenAI } from "openai";
-import * as lancedb from "@lancedb/lancedb";
 import { getServerSession } from "next-auth";
 import { authOptions } from '@/lib/auth-options';
-import { generateEmbedding } from '../utils/embedding-helper';
-import { Story } from '@prisma/client';
- 
+import { generateEmbedding, dbPromise } from '../utils/embedding-helper';
+import { Story } from './route';
 
 export async function GET(request: NextRequest) {
   try {
-    // Get user session
     const session = await getServerSession(authOptions);
     
     if (!session?.user?.id) {
@@ -19,16 +15,12 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Get search query from URL parameters
     const searchParams = request.nextUrl.searchParams;
     const searchQuery = searchParams.get('query');
     const limit = parseInt(searchParams.get('limit') || '30');
 
-    // Connect to LanceDB
-    const uri = "/tmp/lancedb/";
-    const db = await lancedb.connect(uri);
+    const db = await dbPromise;
 
-    // Check if story table exists
     const tableNames = await db.tableNames();
     if (!tableNames.includes("story")) {
       return NextResponse.json(
@@ -41,11 +33,9 @@ export async function GET(request: NextRequest) {
     let stories : Story[] = [];
 
     if (searchQuery) {
-      // Generate embedding for search query
       const queryEmbedding = await generateEmbedding(searchQuery);
 
-      // Perform semantic search with filtering by authorId
-       stories = await table.search(queryEmbedding)
+      stories = await table.search(queryEmbedding)
         .where(`authorId = '${session.user.id}'`)
         .limit(limit)
         .select([
@@ -60,10 +50,12 @@ export async function GET(request: NextRequest) {
           "createdAt",
           "updatedAt",
           "pureHuman",
+          "summary",
+          "tags",
+          "thumbnail"
         ])
         .execute();
     } else {
-      // If no search query, just get all user's stories
       stories = await table.search()
         .where(`authorId = '${session.user.id}'`)
         .limit(limit)
@@ -78,17 +70,19 @@ export async function GET(request: NextRequest) {
           "numberOfWords",
           "createdAt",
           "updatedAt",
-          "pureHuman"
+          "pureHuman",
+          "summary",
+          "tags",
+          "thumbnail"
         ])
         .execute();
     }
 
-    // Transform the data for response
     const formattedStories = stories.map(story => ({
       id: story.id,
       title: story.title,
       content: story.content,
-      rawText: story.rawContent,
+      rawText: story.rawText,
       status: story.status,
       liked: story.liked,
       numberOfComments: story.numberOfComments,
@@ -96,7 +90,9 @@ export async function GET(request: NextRequest) {
       createdAt: story.createdAt,
       updatedAt: story.updatedAt,
       pureHuman: story.pureHuman,
-      // Add similarity score if it's a semantic search
+      summary: story.summary,
+      tags: story.tags,
+      thumbnail: story.thumbnail,
       ...(searchQuery && { similarity: story._distance }),
     }));
 
@@ -116,4 +112,3 @@ export async function GET(request: NextRequest) {
     );
   }
 }
-  

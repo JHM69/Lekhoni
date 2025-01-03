@@ -6,6 +6,9 @@ import FontSelector from "./FontSelector";
 import html2canvas from "html2canvas";
 import { Share } from "lucide-react";
 
+//
+// --- Custom Hook for Undo/Redo ---
+//
 const useHistory = (
   initialState: string,
 ): [
@@ -26,8 +29,17 @@ const useHistory = (
     setIndex(newHistory.length - 1);
   };
 
-  const undo = () => index > 0 && setIndex(index - 1);
-  const redo = () => index < history.length - 1 && setIndex(index + 1);
+  const undo = () => {
+    if (index > 0) {
+      setIndex(index - 1);
+    }
+  };
+
+  const redo = () => {
+    if (index < history.length - 1) {
+      setIndex(index + 1);
+    }
+  };
 
   return [
     history[index],
@@ -39,31 +51,53 @@ const useHistory = (
   ];
 };
 
+//
+// --- Editor Props ---
+//
 interface EditorProps {
   initialContent: string;
-  model : string;
-  onChangeModel: (model: string) => void;
   onChangeContent: (content: string) => void;
   isShareButtonVisible?: boolean;
   onShareButtonClick?: () => void;
 }
 
-const LekhoniEditor = ({ 
-  initialContent, 
-  model="openai-gpt-4o", //also can be 'লেখনি powered by mBert' 
-  onChangeModel,
-  onChangeContent, 
+//
+// --- Main Editor Component ---
+//
+const LekhoniEditor2 = ({
+  initialContent,
+  onChangeContent,
   isShareButtonVisible = false,
-  onShareButtonClick 
+  onShareButtonClick,
 }: EditorProps) => {
-  console.log({initialContent})
-  const [content, setContent, undo, redo, canUndo, canRedo] = useHistory(initialContent);
+  // -- State and Refs --
+  const [content, setContent, undo, redo, canUndo, canRedo] =
+    useHistory(initialContent);
   const [isRecording, setIsRecording] = useState(false);
   const [currentFont, setCurrentFont] = useState("Kalpurush");
   const [isExporting, setIsExporting] = useState(false);
   const editorRef = useRef<HTMLDivElement>(null);
   const recognition = useRef<any>(null);
 
+  //
+  // --- Keep <div> contentEditable in sync with `content` state ---
+  //
+  useEffect(() => {
+    if (editorRef.current) {
+      editorRef.current.innerHTML = content;
+    }
+  }, [content]);
+
+  //
+  // --- Trigger parent's onChangeContent whenever our local content changes ---
+  //
+  useEffect(() => {
+    onChangeContent(content);
+  }, [content, onChangeContent]);
+
+  //
+  // --- Clean up speech recognition on unmount ---
+  //
   useEffect(() => {
     return () => {
       if (recognition.current) {
@@ -72,19 +106,15 @@ const LekhoniEditor = ({
     };
   }, []);
 
-  useEffect(() => {
-    onChangeContent(initialContent);
-  }, [initialContent]);
-
-  useEffect(() => {
-    onChangeContent(content);
-  }, [content, onChangeContent]);
-
+  //
+  // --- Speech Recognition Setup ---
+  //
   const initializeSpeechRecognition = () => {
     if (!recognition.current && typeof window !== "undefined") {
       const SpeechRecognition =
         (window as any).SpeechRecognition ||
         (window as any).webkitSpeechRecognition;
+
       if (!SpeechRecognition) {
         alert("Speech recognition is not supported in this browser.");
         return false;
@@ -120,6 +150,9 @@ const LekhoniEditor = ({
     return !!recognition.current;
   };
 
+  //
+  // --- Toggle Microphone (Speech-to-Text) ---
+  //
   const toggleRecording = () => {
     if (!isRecording) {
       const initialized = initializeSpeechRecognition();
@@ -133,6 +166,9 @@ const LekhoniEditor = ({
     }
   };
 
+  //
+  // --- Format Text Commands (execCommand) ---
+  //
   const formatText = (command: string) => {
     document.execCommand(command, false);
     if (editorRef.current) {
@@ -140,6 +176,9 @@ const LekhoniEditor = ({
     }
   };
 
+  //
+  // --- Export to PDF ---
+  //
   const exportToPDF = async () => {
     if (!editorRef.current || isExporting) return;
 
@@ -195,18 +234,14 @@ const LekhoniEditor = ({
     }
   };
 
-  // useEffect(() => {
-  //   console.log(content)
-  // }, [content]);
- 
-  const handleModelChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-    onChangeModel(event.target.value);
-  };
-
+  //
+  // --- Render ---
+  //
   return (
-    <div className="w-full h-full max-w-4xl mx-auto p-4 bg-white dark:bg-gray-900 shadow-lg rounded-xl">
+    <div className="w-full max-w-4xl mx-auto p-4 bg-white dark:bg-gray-900 shadow-lg rounded-xl">
+      {/* Toolbar */}
       <div className="flex flex-wrap gap-2 mb-4 p-2 bg-gray-50 dark:bg-gray-950 border border-gray-200 dark:border-gray-600 rounded-lg">
-        
+        {/* Bold */}
         <Button onClick={() => formatText("bold")}>
           <svg
             className="w-4 h-4 text-gray-900 dark:text-gray-200"
@@ -228,6 +263,8 @@ const LekhoniEditor = ({
             />
           </svg>
         </Button>
+
+        {/* Italic */}
         <Button onClick={() => formatText("italic")}>
           <svg
             className="w-4 h-4 text-gray-900 dark:text-gray-200"
@@ -244,8 +281,10 @@ const LekhoniEditor = ({
           </svg>
         </Button>
 
+        {/* Divider */}
         <div className="w-px h-6 bg-gray-300 dark:bg-gray-500 mx-2" />
 
+        {/* Undo */}
         <Button onClick={undo} disabled={!canUndo}>
           <svg
             className="w-4 h-4 text-gray-900 dark:text-gray-200"
@@ -261,6 +300,8 @@ const LekhoniEditor = ({
             />
           </svg>
         </Button>
+
+        {/* Redo */}
         <Button onClick={redo} disabled={!canRedo}>
           <svg
             className="w-4 h-4 text-gray-900 dark:text-gray-200"
@@ -277,13 +318,17 @@ const LekhoniEditor = ({
           </svg>
         </Button>
 
+        {/* Divider */}
         <div className="w-px h-6 bg-gray-300 dark:bg-gray-500 mx-2" />
 
+        {/* Mic Toggle */}
         <Button
           onClick={toggleRecording}
           active={isRecording}
           className={
-            isRecording ? "bg-red-100 dark:bg-red-900 border-red-500 text-red-950 dark:text-red-300" : ""
+            isRecording
+              ? "bg-red-100 dark:bg-red-900 border-red-500 text-red-950 dark:text-red-300"
+              : ""
           }
         >
           <svg
@@ -301,8 +346,10 @@ const LekhoniEditor = ({
           </svg>
         </Button>
 
+        {/* Font Selector */}
         <FontSelector onChange={setCurrentFont} currentFont={currentFont} />
 
+        {/* Export to PDF */}
         <Button onClick={exportToPDF} disabled={isExporting}>
           {isExporting ? (
             "Exporting..."
@@ -323,27 +370,26 @@ const LekhoniEditor = ({
           )}
         </Button>
 
-        <select 
-          value={model} 
-          onChange={handleModelChange} 
-          className="pl-2 w-40 border border-gray-300 dark:border-gray-600 rounded-lg"
-        >
-          <option value="openai-gpt-4o">openai-gpt-4o</option>
-          <option value="লেখনি powered by mBert">লেখনি powered by mBert</option>
-        </select>
-
-        {/* Share Button With Icon */} 
+        {/* Share Button */}
         {isShareButtonVisible && onShareButtonClick && (
-          <Button className="flex flex-row bg-primary dark:bg-primary-dark" onClick={onShareButtonClick}>
-             <Share  size={18} className="text-gray-900 dark:text-gray-200" />
-            <span className="ml-2 font-bold text-gray-900 dark:text-gray-200">Share</span>
+          <Button
+            className="flex flex-row bg-primary dark:bg-primary-dark"
+            onClick={onShareButtonClick}
+          >
+            <Share size={18} className="text-gray-900 dark:text-gray-200" />
+            <span className="ml-2 font-bold text-gray-900 dark:text-gray-200">
+              Share
+            </span>
           </Button>
         )}
       </div>
 
+      {/* Editable content area */}
       <div
         ref={editorRef}
-        className="min-h-[500px] p-4 border border-gray-200 dark:border-gray-600 rounded-lg focus:outline-none focus:border-blue-500 dark:focus:border-blue-300 transition-colors bg-white dark:bg-gray-950 text-gray-900 dark:text-gray-200"
+        className="min-h-[400px] p-4 border border-gray-200 dark:border-gray-600 
+                   rounded-lg focus:outline-none focus:border-blue-500 dark:focus:border-blue-300 
+                   transition-colors bg-white dark:bg-gray-950 text-gray-900 dark:text-gray-200"
         contentEditable
         suppressContentEditableWarning
         style={{ fontFamily: currentFont }}
@@ -353,5 +399,4 @@ const LekhoniEditor = ({
   );
 };
 
-export default LekhoniEditor;
-
+export default LekhoniEditor2;
