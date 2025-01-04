@@ -122,10 +122,10 @@ export default function StoryViewPage() {
 
             {/* Featured Image */}
             <div className="relative h-[400px] rounded-lg overflow-hidden">
-              <Image
+              <img
                 src={story.thumbnail}
                 alt={story.title}
-                fill
+             
                 className="object-cover"
               />
             </div>
