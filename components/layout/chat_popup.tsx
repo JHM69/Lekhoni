@@ -49,7 +49,7 @@ export default function ChatPopup() {
                       animate={{ x: 0 }}
                       transition={{ type: "spring", stiffness: 300 }}
                     >
-                      Chat with AI
+                      চ্যাট বট
                     </motion.h3>
                     <motion.div
                       whileHover={{ scale: 1.05 }}
@@ -71,7 +71,7 @@ export default function ChatPopup() {
                     transition={{ delay: 0.2 }}
                   >
                     <div className="bg-muted p-2 rounded-lg max-w-[80%]">
-                      Hello! How can I help you today?
+                     কীভাবে সাহায্য করতে পারি?
                     </div>
                   </motion.div>
                 </CardContent>

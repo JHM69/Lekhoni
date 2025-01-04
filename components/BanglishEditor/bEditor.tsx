@@ -4,18 +4,62 @@ import React, { useState, useRef, useEffect } from "react";
 import { jsPDF } from "jspdf";
 import html2canvas from "html2canvas";
 import { Share } from "lucide-react";
-import {convertToHTMLText} from "@/lib/pdf_design";
 
-const useHistory = (
-  initialState: string,
-): [
-  string,
-  (newState: string) => void,
-  () => void,
-  () => void,
-  boolean,
-  boolean,
-] => {
+export interface EditorProps {
+  initialContent: string;
+  model: string;
+  onChangeModel: (model: string) => void;
+  onChangeContent: (content: string) => void;
+  isShareButtonVisible?: boolean;
+  onShareButtonClick?: () => void;
+  apiKey?: string;
+}
+
+export interface ButtonProps {
+  children: React.ReactNode;
+  onClick?: () => void;
+  disabled?: boolean;
+  active?: boolean;
+  className?: string;
+}
+
+export interface FontSelectorProps {
+  onChange: (font: string) => void;
+  currentFont: string;
+}
+
+export interface Suggestion {
+  text: string;
+  completed: boolean;
+}
+
+// Button.tsx
+const Button = ({ children, onClick, disabled, active, className = "" }: ButtonProps) => (
+  <button
+    onClick={onClick}
+    disabled={disabled}
+    className={`px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-600 
+    hover:bg-gray-100 dark:hover:bg-gray-800 disabled:opacity-50 
+    disabled:cursor-not-allowed transition-colors ${active ? 'bg-gray-200 dark:bg-gray-700' : ''} ${className}`}
+  >
+    {children}
+  </button>
+);
+
+// FontSelector.tsx
+const FontSelector = ({ onChange, currentFont }: FontSelectorProps) => (
+  <select
+    value={currentFont}
+    onChange={(e) => onChange(e.target.value)}
+    className="px-3 py-2 border border-gray-200 dark:border-gray-600 rounded-lg"
+  >
+    <option value="Kalpurush">Kalpurush</option>
+    <option value="SolaimanLipi">SolaimanLipi</option>
+    <option value="AdorshoLipi">AdorshoLipi</option>
+  </select>
+);
+
+const useHistory = (initialState: string) => {
   const [index, setIndex] = useState(0);
   const [history, setHistory] = useState([initialState]);
 
@@ -184,7 +228,10 @@ const LekhoniEditor = ({
       container.style.padding = "20mm";
       container.style.fontFamily = currentFont;
 
-      container.innerHTML = convertToHTMLText(title, caption, editorRef.current.innerHTML);
+      container.innerHTML = `
+        <div style="font-size: 24px; font-weight: bold; margin-bottom: 1em;">Generated Document</div>
+        ${editorRef.current.innerHTML}
+      `;
 
       document.body.appendChild(container);
 
@@ -273,7 +320,7 @@ const LekhoniEditor = ({
         <select 
           value={model}
           onChange={(e) => onChangeModel(e.target.value)}
-          className="px-3 py-2 w-40 border border-gray-300 dark:border-gray-600 rounded-lg"
+          className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg w-40"
         >
           <option value="openai-gpt-4o">openai-gpt-4o</option>
           <option value="লেখনি powered by mBert">লেখনি powered by mBert</option>

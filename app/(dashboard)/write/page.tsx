@@ -3,12 +3,9 @@
 
 import LekhoniEditor from "@/components/BanglishEditor/bEditor"; // Removed duplicate BanglishEditor import
 import { Button } from "@/components/ui/button";
-import { LanguagesIcon, Share, Copy, Globe2, Lock, Send } from "lucide-react"; // Add this import with other Lucide icons
-import { useState, useEffect, useCallback } from "react";
+import { LanguagesIcon, Share, Copy, Globe2, Lock } from "lucide-react"; // Add this import with other Lucide icons
+import { useState } from "react";
 import { useToast } from "@/components/ui/use-toast"; // Add this import
-import { v4 as uuidv4 } from 'uuid'; // Add this import at the top with other imports
-import { ref, set, get, onValue } from "firebase/database"; // Add this import
-import { database } from "@/utils/firebase"; // Add this import
 import {
   Dialog,
   DialogContent,
@@ -25,12 +22,9 @@ import { Textarea } from "@/components/ui/textarea";
 import LekhoniEditor2 from "@/components/BanglishEditor/bEditor2";
 import { title } from "process";
 import Image from "next/image";
-import debounce from 'lodash/debounce';
 // Removed unused import: import { tr } from "date-fns/locale";
 
 export default function Page() {
-  // Add new loading state
-  const [isInitializing, setIsInitializing] = useState(true);
   const [editedText, setEditedText] = useState<string>(""); // Initialized as empty string
   const [model, setModel] = useState<any>('openai-gpt-4o');
   const [translatedText, setTranslatedText] = useState<string | null>("");
@@ -45,58 +39,11 @@ export default function Page() {
     thumbnail: ''
   });
   const [isLoadingMeta, setIsLoadingMeta] = useState(false);
-  const [lastSavedTimestamp, setLastSavedTimestamp] = useState<number>(0);
   const router = useRouter();
   const { toast } = useToast();
 
-  // Debounced save function
-  const debouncedSave = useCallback(
-    debounce(async (text: string, token: string) => {
-      try {
-        const now = Date.now();
-        const editRef = ref(database, `edits/${token}`);
-        await set(editRef, {
-          text,
-          timestamp: now,
-        });
-        setLastSavedTimestamp(now);
-      } catch (error) {
-        console.error("Error saving to Firebase:", error);
-      }
-    }, 500),
-    []
-  );
-
-  // Modified save to Firebase function with better error handling
-  const saveToFirebase = async (text: string, token: string) => {
-    if (!token) return;
-    try {
-      const now = Date.now();
-      const editRef = ref(database, `edits/${token}`);
-      await set(editRef, {
-        text,
-        timestamp: now,
-      });
-      setLastSavedTimestamp(now);
-      console.log("Content saved to Firebase");
-    } catch (error) {
-      console.error("Error saving to Firebase:", error);
-      toast({
-        title: "Error",
-        description: "Failed to save changes",
-        variant: "destructive",
-      });
-    }
-  };
-
-  // Modified onTextChange to handle updates better
   const onTextChange = (text: string) => {
     setEditedText(text);
-    const url = new URL(window.location.href);
-    const token = url.searchParams.get('token');
-    if (token && text !== editedText) {  // Only save if content actually changed
-      saveToFirebase(text, token);
-    }
   };
 
   const handleTranslate = async () => {
@@ -131,45 +78,6 @@ export default function Page() {
       toast({
         title: "Translation Failed",
         description: "Failed to translate text. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleImprove = async () => {
-    if (!translatedText) {
-      toast({
-        title: "Error",
-        description: "Please enter some text to improve",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    try {
-      setIsLoading(true);
-      console.log("Sending improvement request:", translatedText);
-
-      const apiUrl = model === 'openai-gpt-4o' ? '/api/ai/improve_writting' : '/api/ai/improve_writting';
-
-      const { data } = await axios.post(apiUrl, {
-        text: translatedText,
-      });
-
-      console.log("Improvement response:", data);
-
-      if (!data.improved_text) {
-        throw new Error("No improved text received");
-      }
-      console.log("Translated Text:", data.improved_text);
-      setTranslatedText(data.improved_text);
-    } catch (error) {
-      console.error("Improvement error:", error);
-      toast({
-        title: "Improvement Failed",
-        description: "Failed to improve text. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -216,11 +124,6 @@ export default function Page() {
   const handleShareClick = async () => {
     setIsShareDialogOpen(true);
     await fetchMetadata();
-  };
-
-  const handleFeedbackClick = async () => {
-    const feedbackUrl = `/feedback?input=${encodeURIComponent(editedText)}&output=${encodeURIComponent(translatedText || '')}`;
-    window.open(feedbackUrl, "_blank");
   };
 
   const handleShareSubmit = async () => {
@@ -300,92 +203,6 @@ export default function Page() {
     }
   };
 
-  // Modified useEffect for proper initialization and updates
-  useEffect(() => {
-    let unsubscribe: () => void;
-    let token: string | null;
-
-    const initializeEditor = async () => {
-      setIsInitializing(true);
-      
-      try {
-        const url = new URL(window.location.href);
-        token = url.searchParams.get('token');
-        
-        if (!token) {
-          token = uuidv4();
-          url.searchParams.set('token', token);
-          window.history.replaceState({}, '', url.toString());
-          setIsInitializing(false);
-          return;
-        }
-
-        const editRef = ref(database, `edits/${token}`);
-
-        // Set up realtime listener first
-        unsubscribe = onValue(editRef, (snapshot) => {
-          const data = snapshot.val();
-          console.log("Realtime update received:", data);
-          
-          if (data && data.text) {
-            // Always update text if it's different from current
-            if (data.text !== editedText) {
-              console.log("Updating editor content");
-              setEditedText(data.text);
-              if (data.timestamp) {
-                setLastSavedTimestamp(data.timestamp);
-              }
-            }
-          }
-        });
-
-        // Initial data fetch
-        const snapshot = await get(editRef);
-        const data = snapshot.val();
-        if (data && data.text) {
-          setEditedText(data.text);
-          setLastSavedTimestamp(data.timestamp || Date.now());
-          toast({
-            title: "Draft Loaded",
-            description: "Previous draft has been restored",
-          });
-        }
-
-      } catch (error) {
-        console.error("Error initializing editor:", error);
-        toast({
-          title: "Error",
-          description: "Failed to initialize editor",
-          variant: "destructive",
-        });
-      } finally {
-        setIsInitializing(false);
-      }
-    };
-
-    initializeEditor();
-
-    // Cleanup
-    return () => {
-      if (unsubscribe) {
-        unsubscribe();
-      }
-      debouncedSave.cancel();
-    };
-  }, []); // Empty dependency array since we only want this to run once
-
-  // Modify the return JSX to show loading state
-  if (isInitializing) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="space-y-4 text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-700 mx-auto"></div>
-          <p className="text-gray-500">লোড হচ্ছে...</p>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="min-h-screen bg-gradient-to-b">
  
@@ -402,14 +219,13 @@ export default function Page() {
               onChangeContent={onTextChange}
               isShareButtonVisible={false}
               onShareButtonClick={handleShareClick}
-              key={`editor-${isInitializing}-${editedText.length}`} // Better key for forcing re-render
             />
 
             
           </div>
 
           {/* Center Button */}
-            <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-10 lg:block hidden space-y-4">
+          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-10 lg:block hidden">
             <Button
               onClick={handleTranslate}
               className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 transform transition-transform hover:scale-105 shadow-lg"
@@ -418,16 +234,7 @@ export default function Page() {
             >
               {isLoading ? "অনুবাদ হচ্ছে..." : "অনুবাদ করুন"}
             </Button>
-
-            <Button
-              onClick={handleImprove}
-              className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 transform transition-transform hover:scale-105 shadow-lg"
-              disabled={isLoading}
-              size="lg"
-            >
-              {isLoading ? "উন্নত হচ্ছে..." : "উন্নত করুন"}
-            </Button>
-            </div>
+          </div>
 
           {/* Translation Section */}
           <div className="rounded-xl shadow-lg border min-h-[600px]">
@@ -454,13 +261,6 @@ export default function Page() {
                         <Share size={18} className="text-gray-100" />
                         <span className="ml-2 font-bold text-gray-100">শেয়ার করুন</span>
                       </Button>
-                      <Button
-                        className="flex items-end flex-row bg-green-800 dark:bg-green-700 hover:dark:bg-green-700"
-                        onClick={handleFeedbackClick} // Fixed handler name
-                      >
-                        <Send size={18} className="text-gray-100" />
-                        <span className="ml-2 font-bold text-gray-100">প্রতিক্রিয়া</span>
-                      </Button>
                     </div>
 
                     {/* Display Translated Text */}
@@ -481,7 +281,7 @@ export default function Page() {
           </div>
 
           {/* Mobile Translation Button */}
-          {/* <div className="lg:hidden flex justify-center mt-4">
+          <div className="lg:hidden flex justify-center mt-4">
 
           
             <Button
@@ -496,7 +296,7 @@ export default function Page() {
                <LanguagesIcon size={24} />
               </>}
             </Button>
-          </div> */}
+          </div>
         </div>
       </div>
 
@@ -604,7 +404,7 @@ export default function Page() {
               বাতিল করুন
             </Button>
             <Button onClick={handleShareSubmit} disabled={isSharing}>
-              {isSharing ? "শেয়ার হচ্ছে..." : "শেয়ার করুন"}
+              {isSharing ? "শেয়ার হচ্ছে..." : "শেয়ার করুন"}
             </Button>
           </DialogFooter>
         </DialogContent>

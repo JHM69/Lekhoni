@@ -5,10 +5,11 @@ interface StyleOptions {
 }
 
 export function convertToHTMLText(
-  title: string, 
-  caption: string, 
+
   content: string, 
   thumbnail?: string,
+  title?: string, 
+  caption?: string, 
   options: StyleOptions = {}
 ): string {
   const {
