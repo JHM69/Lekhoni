@@ -1,8 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from "next-auth";
 import { authOptions } from '@/lib/auth-options';
-import { generateEmbedding, dbPromise } from '../utils/embedding-helper';
-import { Story } from './route';
+import { generateEmbedding } from '../../utils/embedding-helper';
+import { Story } from '../route';
+
+import * as lancedb from "@lancedb/lancedb";
+ 
 
 export async function GET(request: NextRequest) {
   try {
@@ -19,6 +22,9 @@ export async function GET(request: NextRequest) {
     const searchQuery = searchParams.get('query');
     const limit = parseInt(searchParams.get('limit') || '30');
 
+    const uri = "/tmp/lancedb/";
+    const dbPromise =  lancedb.connect(uri);
+
     const db = await dbPromise;
 
     const tableNames = await db.tableNames();
@@ -31,12 +37,9 @@ export async function GET(request: NextRequest) {
 
     const table = await db.openTable("story");
     let stories : Story[] = [];
-
-    if (searchQuery) {
-      const queryEmbedding = await generateEmbedding(searchQuery);
-
-      stories = await table.search(queryEmbedding)
-        .where(`authorId = '${session.user.id}'`)
+ 
+      stories = await table.query()
+        // .where(`authorId = "${session.user.id}"`)
         .limit(limit)
         .select([
           "id",
@@ -54,29 +57,8 @@ export async function GET(request: NextRequest) {
           "tags",
           "thumbnail"
         ])
-        .execute();
-    } else {
-      stories = await table.search()
-        .where(`authorId = '${session.user.id}'`)
-        .limit(limit)
-        .select([
-          "id",
-          "title",
-          "content",
-          "rawText",
-          "status",
-          "liked",
-          'numberOfComments',
-          "numberOfWords",
-          "createdAt",
-          "updatedAt",
-          "pureHuman",
-          "summary",
-          "tags",
-          "thumbnail"
-        ])
-        .execute();
-    }
+        .toArray();
+    
 
     const formattedStories = stories.map(story => ({
       id: story.id,
@@ -96,10 +78,19 @@ export async function GET(request: NextRequest) {
       ...(searchQuery && { similarity: story._distance }),
     }));
 
+
+    const analytics =  {
+      numberOfStories: formattedStories.length,
+      numberOfWords: formattedStories.reduce((acc, story) => acc + (story.numberOfWords || 0), 0),
+      numberOfLikes: formattedStories.reduce((acc, story) => acc + story.liked, 0),
+      numberOfComments: formattedStories.reduce((acc, story) => acc + story.numberOfComments, 0),
+    }
+
     return NextResponse.json(
       { 
         status: "success",
-        stories: formattedStories
+        stories: formattedStories,
+        analytics 
       },
       { status: 200 }
     );

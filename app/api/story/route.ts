@@ -108,42 +108,26 @@ export async function GET(request: NextRequest) {
     const db = await lancedb.connect(uri);
     const table = await db.openTable("story");
 
-    let whereConditions = ["status = 'PUBLIC'"];
+ 
     
-    // Handle tag filtering
-    if (selectedTag === 'my-stories') {
-      whereConditions = [`authorId = '${session.user.id}'`];
-    } else if (selectedTag !== 'all') {
-      whereConditions.push(`tags LIKE '%${selectedTag}%'`);
-    }
 
-    const whereClause = whereConditions.join(" AND ");
+    // const whereClause = whereConditions.join(" AND ");
     let query;
 
     if (searchQuery) {
       const embedding = await generateEmbedding(searchQuery);
       query = table.search(embedding)
-        .where(whereClause)
+        .where(`status = 'PUBLIC'`)
         .limit(limit);
     } else {
       query = table.query()
-        .where(whereClause)
+        .where(`status = 'PUBLIC'`)
         .limit(limit);
-
-      // Apply sorting
-      // switch (sortBy) {
-      //   case 'latest':
-      //     query = query.orderBy('createdAt', 'desc');
-      //     break;
-      //   case 'popular':
-      //     query = query.orderBy('liked', 'desc');
-      //     break;
-      //   case 'oldest':
-      //     query = query.orderBy('createdAt', 'asc');
-      //     break;
-      // }
+ 
     }
 
+
+  
     const stories = await query
       .select([
         "id", "title", "content", "rawText", "status",
@@ -155,13 +139,26 @@ export async function GET(request: NextRequest) {
 
     console.log({stories});
 
-    const formattedStories = stories.map((story: Story) => ({
+    let formattedStories = stories.map((story: Story) => ({
       ...story,
       ...(searchQuery && { similarity: story._distance }),
     }));
 
 
     console.log({formattedStories});
+
+
+      
+ 
+      if (selectedTag === 'my-stories') {
+        // Filter stories by the current user
+        formattedStories = formattedStories.filter((story: Story) => story.authorId === session?.user.id);
+      } else if (selectedTag !== 'all') {
+        // Filter stories by the selected tag
+        formattedStories = formattedStories.filter((story: Story) => story.tags.includes(selectedTag));
+      }
+
+       
 
     return NextResponse.json(
       { status: "success", stories: formattedStories },
