@@ -4,7 +4,7 @@
 import LekhoniEditor from "@/components/BanglishEditor/bEditor"; // Removed duplicate BanglishEditor import
 import { Button } from "@/components/ui/button";
 import { LanguagesIcon, Share, Copy, Globe2, Lock } from "lucide-react"; // Add this import with other Lucide icons
-import { useState } from "react";
+import { useState, useEffect } from "react"; // Add useEffect import
 import { useToast } from "@/components/ui/use-toast"; // Add this import
 import {
   Dialog,
@@ -22,6 +22,9 @@ import { Textarea } from "@/components/ui/textarea";
 import LekhoniEditor2 from "@/components/BanglishEditor/bEditor2";
 import { title } from "process";
 import Image from "next/image";
+import { v4 as uuidv4 } from 'uuid'; // Add this import at the top with other imports
+import { ref, set, onValue, get } from "firebase/database"; // Update import
+import { database } from "@/utils/firebase"; // Add this import
 // Removed unused import: import { tr } from "date-fns/locale";
 
 export default function Page() {
@@ -39,8 +42,46 @@ export default function Page() {
     thumbnail: ''
   });
   const [isLoadingMeta, setIsLoadingMeta] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const router = useRouter();
   const { toast } = useToast();
+
+  // Add useEffect for initial load and real-time updates
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const token = params.get('token');
+
+    if (!token) {
+      const newToken = uuidv4();
+      const newUrl = `${window.location.pathname}?token=${newToken}${window.location.hash}`;
+      window.history.replaceState({}, '', newUrl);
+      return;
+    }
+
+    // Reference to the data location
+    const editRef = ref(database, `edits/${token}`);
+
+    // First get the initial data
+    get(editRef).then((snapshot) => {
+      if (snapshot.exists()) {
+        const data = snapshot.val();
+        setEditedText(data.text || '');
+      }
+    }).catch((error) => {
+      console.error("Error getting initial data:", error);
+    });
+
+    // Then set up real-time listener
+    const unsubscribe = onValue(editRef, (snapshot) => {
+      if (snapshot.exists()) {
+        const data = snapshot.val();
+        setEditedText(data.text || '');
+      }
+    });
+
+    // Cleanup listener on component unmount
+    return () => unsubscribe();
+  }, []); // Empty dependency array as we only want this to run once on mount
 
   const onTextChange = (text: string) => {
     setEditedText(text);
@@ -254,6 +295,38 @@ export default function Page() {
     }
   };
 
+  const handleSave = async () => {
+    try {
+      setIsSaving(true);
+      const params = new URLSearchParams(window.location.search);
+      const token = params.get('token');
+      
+      if (!token) {
+        throw new Error('No token found');
+      }
+
+      const editRef = ref(database, `edits/${token}`);
+      await set(editRef, {
+        text: editedText,
+        timestamp: Date.now(),
+      });
+
+      toast({
+        title: "সফলভাবে সংরক্ষিত হয়েছে",
+        description: "আপনার টেক্সট সংরক্ষণ করা হয়েছে",
+      });
+    } catch (error) {
+      console.error('Save error:', error);
+      toast({
+        title: "সংরক্ষণ ব্যর্থ হয়েছে",
+        description: "দুঃখিত, আবার চেষ্টা করুন",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-b">
  
@@ -263,6 +336,26 @@ export default function Page() {
         <div className="relative grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Editor Section */}
           <div className="rounded-xl shadow-lg border min-h-[600px]">
+            <div className="flex justify-end p-2 gap-2">
+              <Button
+                className="flex items-center flex-row bg-blue-700 hover:bg-blue-600"
+                onClick={handleSave}
+                disabled={isSaving || !editedText}
+              >
+                {isSaving ? (
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                ) : (
+                  <>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+                      <polyline points="17 21 17 13 7 13 7 21"></polyline>
+                      <polyline points="7 3 7 8 15 8"></polyline>
+                    </svg>
+                    <span className="ml-2 font-bold text-gray-100">সংরক্ষণ করুন</span>
+                  </>
+                )}
+              </Button>
+            </div>
             <LekhoniEditor
               initialContent={editedText}
               model={model}
