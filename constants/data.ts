@@ -23,7 +23,7 @@ export const navItems: NavItem[] = [
   }, 
   
   {
-    title: "Chat Bot",
+    title: "Chat",
     href: "/chat-bot",
     icon: "analytics",
     label: "Ai Helper",
@@ -37,10 +37,24 @@ export const navItems: NavItem[] = [
   },
  
   {
-    title: "Setting",
+    title: "Settings",
     href: "/settings",
     icon: "Settings",
     label: "setting",
+  },
+
+  {
+    title: "Feedbacks",
+    href: "/feedbacks",
+    icon: "validate",
+    label: "feedbacks",
+  },
+
+  {
+    title: "Analytics",
+    href: "/analytics",
+    icon: "help",
+    label: "analytics",
   },
  
  
