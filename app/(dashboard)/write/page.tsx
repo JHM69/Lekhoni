@@ -65,6 +65,7 @@ export default function Page() {
     get(editRef).then((snapshot) => {
       if (snapshot.exists()) {
         const data = snapshot.val();
+        console.log("Firebase initial data:", data);
         setEditedText(data.text || '');
       }
     }).catch((error) => {
@@ -75,6 +76,7 @@ export default function Page() {
     const unsubscribe = onValue(editRef, (snapshot) => {
       if (snapshot.exists()) {
         const data = snapshot.val();
+        console.log("Firebase real-time update:", data);
         setEditedText(data.text || '');
       }
     });
@@ -357,7 +359,7 @@ export default function Page() {
               </Button>
             </div>
             <LekhoniEditor
-              initialContent={editedText}
+              content={editedText}
               model={model}
               onChangeModel={setModel}
               onChangeContent={onTextChange}
