@@ -28,7 +28,8 @@ import {
 } from "@/components/ui/tooltip";
 import ReactMarkdown from "react-markdown";
 import { ChatBody } from "@/types/types";
- 
+import StoryCard from "../story/storyCard";
+
 const suggestions = [
   {
     text: "গল্পের প্লট সাজেস্ট করুন",
@@ -67,6 +68,24 @@ export default function Page() {
     useState(false);
   const [isRecording, setIsRecording] = useState(false);
 
+  const isStoryData = (content: string) => {
+    return content.startsWith('$$') && content.endsWith('$$');
+  };
+
+  const extractStoryData = (content: string) => {
+    const storyString = content.slice(2, -2); // Remove $$ from start and end
+    try {
+      return JSON.parse(storyString);
+    } catch (error) {
+      console.error('Failed to parse story data:', error);
+      return null;
+    }
+  };
+
+  const handleStoryClick = (storyId: string) => {
+    // Implement navigation to story page
+    console.log('Navigate to story:', storyId);
+  };
 
   const handleNext = async () => {
     const maxCodeLength = 700;
@@ -95,7 +114,7 @@ export default function Page() {
     };
 
     try {
-      const response = await fetch("/api/ai-chat", {
+      const response = await fetch("/api/chat", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -123,8 +142,7 @@ export default function Page() {
         const { value, done: doneReading } = await reader.read();
         done = doneReading;
         const chunkValue = decoder.decode(value);
-        accumulatedResponse += chunkValue;
-       
+        accumulatedResponse += chunkValue; 
       }
 
       setMessages([
@@ -138,6 +156,7 @@ export default function Page() {
       alert("Something went wrong. Please try again.");
     } finally {
       setLoading(false);
+      controller.abort();
     }
   };
 
@@ -303,15 +322,27 @@ export default function Page() {
                           )}
                         </div>
                       </Avatar>
-                      <div
-                        className={`rounded-lg p-3 ${
-                          message.type === "USER"
-                            ? "bg-blue-500 text-white"
-                            : "bg-gray-100 dark:bg-gray-800"
-                        }`}
-                      >
-                        <ReactMarkdown>{message.content}</ReactMarkdown>
-                      </div>
+                      {message.type === "AI" && isStoryData(message.content) ? (
+                        <div className="w-full space-y-4">
+                          {extractStoryData(message.content).map((story: any) => (
+                            <StoryCard
+                              key={story.id}
+                              story={story}
+                              handleStoryClick={handleStoryClick}
+                            />
+                          ))}
+                        </div>
+                      ) : (
+                        <div
+                          className={`rounded-lg p-3 ${
+                            message.type === "USER"
+                              ? "bg-blue-500 text-white"
+                              : "bg-gray-100 dark:bg-gray-800"
+                          }`}
+                        >
+                          <ReactMarkdown>{message.content}</ReactMarkdown>
+                        </div>
+                      )}
                     </div>
                   </div>
                 ))}

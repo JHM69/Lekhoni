@@ -6,17 +6,22 @@ import {
   ReconnectInterval,
 } from 'eventsource-parser'; 
 
-const createPrompt = (inputMessage: string, history: string | undefined, context: string | undefined) => {
-  const data = (inputMessage: string) => {
+
+const createPrompt = (inputMessage: any, history: any | undefined, context: any | undefined) => {
+  const data = (inputMessage: any) => {
     return endent`
       Your name is লেখনী। তুমি বাংলায় অনেক এক্সপার্ট, আর তুমি সবসময় বাংলায় উত্তর দিবে। 
       তোমার সাথে পূর্বে যেসব কথা হয়েছেঃ ${history}.
-      তুমি Konwledge Base হিসেবে যেসকল তথ্য জানোঃ ${context}.
-
+     
       তোমার প্রশ্নটি হলঃ
       ${inputMessage}
 
-      If there is a @Story or anything related to Story , You will send your response as HTML formatted stories from the Context,
+      ${ 
+      context ? 
+      `তোমার প্রশ্নটি সম্পর্কে আমার কাছে কিছু গল্প রয়েছে। এখান থেকে তুমি সেগুলো পড়তে পারো, এবং সে অনুযায়ী উত্তর দিতে পারোঃ  ${context}, 
+       এখানে যে গল্পটি সম্পর্কে জিজ্ঞাসা করা হয়েছে সেটার json কে অবশ্যই $$"{json}"$$ এর মধ্যে পাঠাবে, json এর সামনে ও পিছে অবশ্যই $$ সাইন দিবে। আর শুরুতে তোমার মতামত দিবে` : ''
+      }
+ 
     `;
   };
 
@@ -25,24 +30,15 @@ const createPrompt = (inputMessage: string, history: string | undefined, context
   }
 };
 
-export async function OpenAIStream   (
-  inputMessage: string,
-  model: string,
-  history: string | undefined,
-)  {
+export async function OpenAIStream(
+  inputMessage: any,
+  model: any,
+  history?: any | undefined,
+  context?: any | undefined,
+) {
+ 
 
-  console.log('OpenAIStream', inputMessage, model, history)
-
-
-  let context : Story[] = []
-
-  // TODO: Fetch the context from the database using the Embedding Similarity and Add the context to the prompt
-
-
-
-
-  const prompt = createPrompt(inputMessage, history, JSON.stringify(context));
-
+  const prompt = createPrompt(inputMessage, history, context);
   const system = { role: 'system', content: prompt };
 
   const res = await fetch(`https://api.openai.com/v1/chat/completions`, {

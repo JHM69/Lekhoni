@@ -13,7 +13,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { format } from "date-fns"; 
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation'; 
+import { StoryCardSkeleton } from "@/app/components/StoryCardSkeleton";
+ 
 
 export default function StoriesPage() {
   const router = useRouter();
@@ -29,7 +31,7 @@ export default function StoriesPage() {
   const tags = [
     { id: 'all', icon: Globe, label: 'সব' },
     { id: 'my-stories', icon: User, label: 'আমার গল্প সমূহ' },
-    { id: 'mystery', icon: Shield, label: 'রহস্য' },
+    { id: 'Hackathon', icon: Shield, label: 'Hackathon' },
     { id: 'romance', icon: Heart, label: 'রোমান্স' },
     { id: 'adventure', icon: Compass, label: 'এডভেঞ্চার' },
   ];
@@ -67,6 +69,7 @@ export default function StoriesPage() {
 
   useEffect(() => {
     const fetchStories = async () => {
+      setIsLoading(true);
       try {
         const params = new URLSearchParams({
           query: searchQuery,
@@ -82,6 +85,8 @@ export default function StoriesPage() {
         }
       } catch (error) {
         console.error("Error fetching stories:", error);
+      } finally {
+        setIsLoading(false);
       }
     };
 
@@ -155,69 +160,75 @@ export default function StoriesPage() {
           </div>
         </div>
 
-        {/* Stories Grid with enhanced cards */}
+        {/* Stories Grid with loading state */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {stories.map((story) => (
-            <div
-              key={story.id}
-              className="group bg-shadcn-dark border border-shadcn-primary rounded-lg overflow-hidden hover:shadow-lg hover:shadow-primary/20 transition-all duration-300 cursor-pointer"
-              onClick={() => handleStoryClick(story.id)}
-            >
-              <div className="relative h-48 overflow-hidden">
-                <img
-                  src={story.thumbnail}
-                  alt={story.title} 
-                  className="object-cover group-hover:scale-105 transition-transform duration-300"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-shadcn-dark to-transparent opacity-60" />
-                <div className="absolute top-2 right-2 bg-primary px-3 py-1 rounded-full text-xs text-primary-foreground">
-                  {story.tags}
-                </div>
-              </div>
-              
-              <div className="p-6 space-y-4">
-                <div className="space-y-2">
-                  <h2 className="font-galada text-xl font-semibold text-primary group-hover:text-shadcn-accent cursor-pointer">
-                    {story.title}
-                  </h2>
-                  <p className="text-sm text-shadcn-muted line-clamp-2">{story.summary}</p>
-                </div>
-
-                <div className="flex justify-between items-center text-xs text-shadcn-muted">
-                  <span className="flex items-center gap-1">
-                    <Clock className="w-3 h-3" />
-                    {Math.ceil(story.numberOfWords / 200)} মিনিট
-                  </span>
-                  <span>{format(new Date(story.createdAt), 'PP')}</span>
-                </div>
-
-                <div className="flex items-center justify-between pt-4 border-t border-shadcn-primary/30">
-                  <div className="flex items-center gap-4">
-                    <div className="flex items-center gap-1">
-                      <ThumbsUp className="w-4 h-4" />
-                      <span className="text-sm">{story.liked}</span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <MessageCircle className="w-4 h-4" />
-                      <span className="text-sm">{story.numberOfComments}</span>
-                    </div>
+          {isLoading ? (
+            Array(6).fill(0).map((_, index) => (
+              <StoryCardSkeleton key={index} />
+            ))
+          ) : (
+            stories.map((story) => (
+              <div
+                key={story.id}
+                className="group bg-shadcn-dark border border-shadcn-primary rounded-lg overflow-hidden hover:shadow-lg hover:shadow-primary/20 transition-all duration-300 cursor-pointer"
+                onClick={() => handleStoryClick(story.id)}
+              >
+                <div className="relative h-48 overflow-hidden">
+                  <img
+                    src={story.thumbnail}
+                    alt={story.title} 
+                    className="object-cover group-hover:scale-105 transition-transform duration-300"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-shadcn-dark to-transparent opacity-60" />
+                  <div className="absolute top-2 right-2 bg-primary px-3 py-1 rounded-full text-xs text-primary-foreground">
+                    {story.tags}
                   </div>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="hover:text-primary hover:bg-shadcn-primary/10"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleStoryClick(story.id);
-                    }}
-                  >
-                    <BookOpen className="w-4 h-4 mr-2" />
-                    পড়ুন
-                  </Button>
+                </div>
+                
+                <div className="p-6 space-y-4">
+                  <div className="space-y-2">
+                    <h2 className=" text-xl font-semibold text-primary group-hover:text-shadcn-accent cursor-pointer">
+                      {story.title}
+                    </h2>
+                    <p className="text-sm text-shadcn-muted line-clamp-2">{story.summary}</p>
+                  </div>
+
+                  <div className="flex justify-between items-center text-xs text-shadcn-muted">
+                    <span className="flex items-center gap-1">
+                      <Clock className="w-3 h-3" />
+                      {Math.ceil(story.numberOfWords / 200)} মিনিট
+                    </span>
+                    <span>{format(new Date(story.createdAt), 'PP')}</span>
+                  </div>
+
+                  <div className="flex items-center justify-between pt-4 border-t border-shadcn-primary/30">
+                    <div className="flex items-center gap-4">
+                      <div className="flex items-center gap-1">
+                        <ThumbsUp className="w-4 h-4" />
+                        <span className="text-sm">{story.liked}</span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <MessageCircle className="w-4 h-4" />
+                        <span className="text-sm">{story.numberOfComments}</span>
+                      </div>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="hover:text-primary hover:bg-shadcn-primary/10"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleStoryClick(story.id);
+                      }}
+                    >
+                      <BookOpen className="w-4 h-4 mr-2" />
+                      পড়ুন
+                    </Button>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            ))
+          )}
         </div>
 
        
