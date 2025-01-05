@@ -147,11 +147,6 @@ Contributions are welcome! Please follow these steps:
 
 ---
 
-## License
-This project is licensed under the [MIT License](LICENSE).
-
----
-
 ## Contributors
 - **Team Name:** Quantum Guys
 - **Team Members:** [Jahangir Hossain](https://github.com/jhm69), [Md. Farhan Masud Shohag](https://github.com/fms-byte), [Muammar Tazwar Asfi](https://github.com/asfi50)
